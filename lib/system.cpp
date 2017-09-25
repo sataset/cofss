@@ -9,7 +9,7 @@ System& System::add(Module *module) {
 System& System::clear(bool remove_modules) {
 	if (remove_modules)
 		modules.clear();
-	if (storage.empty())
+	if (!storage.empty())
 		storage.clear();
 	
 	return *this;

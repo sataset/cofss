@@ -77,10 +77,10 @@ void Fiber::execute(Field& signal) {
     int samples = signal.size();
     double step = fiber_length / total_steps;
     Field linearity = estimateLinearity(samples);
-    Complex nonlinearity = exp(i_unit * gamma * step);
 
     for (int j = 0; j < samples; ++j)
-        signal[j] *= pow(nonlinearity, norm(signal[j]) / 2);
+        signal[j] *= i_exp(i_unit * gamma * step * norm(signal[j]) / 2);
+        // (e^i gamma step ) ^ norm(signal / 2)
 
     for (int i = 0; i < total_steps; ++i) {
         signal.fft_inplace();
@@ -88,9 +88,9 @@ void Fiber::execute(Field& signal) {
         signal.ifft_inplace();
 
         for (int j = 0; j < samples; ++j)
-            signal[j] *= pow(nonlinearity, norm(signal[j]));
+            signal[j] *= i_exp(i_unit * gamma * step * norm(signal[j]));
     }
 
     for (int j = 0; j < samples; ++j)
-        signal[j] *= pow(nonlinearity, -norm(signal[j]) / 2);
+        signal[j] *= i_exp(i_unit * gamma * step * (-norm(signal[j]) / 2));
 }
