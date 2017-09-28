@@ -6,7 +6,7 @@ System& System::add(Module *module) {
 	return *this;
 }
 
-System& System::clear(bool remove_modules) {
+System& System::clear(bool remove_modules = 0) {
 	if (remove_modules)
 		modules.clear();
 	if (!storage.empty())
@@ -22,7 +22,7 @@ System& System::remove(int module_num) {
 }
 
 Field System::execute(Field& signal) {
-	clear(false);
+	clear();
 
 	if (modules.empty()) return signal;
 

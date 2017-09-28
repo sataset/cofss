@@ -121,6 +121,10 @@ Field convolution(const Field& x, const Field& y) {
     return z;
 }
 
-Complex i_exp(double x) const {
+Complex i_exp(double x) {
     return Complex(cos(x), sin(x));
+}
+
+Complex i_exp(Complex x) {
+    return Complex(cos(x.real()), sin(x.imag()));
 }

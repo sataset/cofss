@@ -79,7 +79,7 @@ void Fiber::execute(Field& signal) {
     Field linearity = estimateLinearity(samples);
 
     for (int j = 0; j < samples; ++j)
-        signal[j] *= i_exp(i_unit * gamma * step * norm(signal[j]) / 2);
+        signal[j] *= i_exp(i_unit * gamma * step * (norm(signal[j]) / 2));
         // (e^i gamma step ) ^ norm(signal / 2)
 
     for (int i = 0; i < total_steps; ++i) {

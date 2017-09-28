@@ -34,6 +34,7 @@ class Field : public ComplexVector {
 };
 
 Field convolution(const Field& x, const Field& y);
-Complex i_exp(double Re, double Im) const;
+Complex i_exp(double x);
+Complex i_exp(Complex x);
 
 #endif  // FIELD_H_
