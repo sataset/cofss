@@ -1,0 +1,2 @@
+plot "out_x.txt" u 0:(sqrt($1*$1 +$2*$2)) w lines , "out_y.txt" u  0:(sqrt(($1*$1 + $2*$2))) w lines
+pause -1

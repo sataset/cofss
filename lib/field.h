@@ -14,14 +14,16 @@ class Field : public ComplexVector {
   public:
     using ComplexVector::vector;
 
-	double null_power() const;
+    double null_power() const;
     double peak_power() const;
     double peak_power(const int& from, const int& to) const;
     double average_power() const;
     double average_power(const int& from, const int& to) const;
-    
+
     Field chomp(const int& at_begin, const int& at_end) const;
-    
+
+    Field operator*(const Complex& multiplier) const;
+    Field operator*(const Field& multipliers) const;
     Field& operator*=(const Complex& multiplier);
     Field& operator*=(const Field& multipliers);
 
@@ -29,12 +31,20 @@ class Field : public ComplexVector {
     Field& ifft_inplace();
     Field& fft_shift();
 
-    Field& temporal_power() const;
-    Field& spectral_power() const;
+    // Field& temporal_power() const;
+    // Field& spectral_power() const;
+};
+
+struct Polarizations {
+    Field x, y;
+
+    Polarizations operator*(const Complex& multiplier) const;
+    Polarizations operator*(const Field& multipliers) const;
+    Polarizations& operator*=(const Complex& multiplier);
+    Polarizations& operator*=(const Field& multipliers);
 };
 
 Field convolution(const Field& x, const Field& y);
-Complex i_exp(double x);
-Complex i_exp(Complex x);
+Complex i_exp(const double& phi);
 
 #endif  // FIELD_H_

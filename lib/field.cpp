@@ -1,9 +1,6 @@
 #include "field.h"
 
-double Field::null_power() const
-{
-	return 0.0;
-}
+double Field::null_power() const { return 0.0; }
 
 double Field::peak_power() const {
     double power = 0;
@@ -23,14 +20,16 @@ double Field::peak_power(const int& from, const int& to) const {
 
 double Field::average_power() const {
     double power = 0;
-    for (int i = 0; i < size(); ++i) power += norm(at(i));
+    for (int i = 0; i < size(); ++i)
+        power += norm(at(i));
 
     return power / size();
 }
 
 double Field::average_power(const int& from, const int& to) const {
     double power = 0;
-    for (int i = from; i < to; ++i) power += norm(at(i));
+    for (int i = from; i < to; ++i)
+        power += norm(at(i));
 
     return power / (to - from);
 }
@@ -44,14 +43,32 @@ Field Field::chomp(const int& at_begin, const int& at_end) const {
     return chomped;
 }
 
+Field Field::operator*(const Complex& multiplier) const {
+    Field copy(*this);
+    for (unsigned long i = 0; i < copy.size(); ++i)
+        copy[i] *= multiplier;
+    return copy;
+}
+
+Field Field::operator*(const Field& multipliers) const {
+    Field copy(*this);
+    if (size() == multipliers.size())
+        for (unsigned long i = 0; i < copy.size(); ++i)
+            copy[i] *= multipliers[i];
+
+    return copy;
+}
+
 Field& Field::operator*=(const Complex& multiplier) {
-    for (int i = 0; i < size(); ++i) at(i) *= multiplier;
+    for (unsigned long i = 0; i < size(); ++i)
+        at(i) *= multiplier;
     return *this;
 }
 
 Field& Field::operator*=(const Field& multipliers) {
     if (size() == multipliers.size())
-        for (int i = 0; i < size(); ++i) at(i) *= multipliers[i];
+        for (unsigned long i = 0; i < size(); ++i)
+            at(i) *= multipliers[i];
     return *this;
 }
 
@@ -95,36 +112,53 @@ Field& Field::fft_shift() {
     return *this;
 }
 
-Field& Field::temporal_power() const {
-    Field temporal(*this);
-    for(int i = 0; temporal.size(); i++)
-        temporal[i] = temporal[i]*temporal[i];
+// Field& Field::temporal_power() const {
+//     Field temporal(*this);
+//     for (int i = 0; temporal.size(); i++)
+//         temporal[i] = temporal[i] * temporal[i];
 
-    return temporal;
+//     return temporal;
+// }
+
+// Field& Field::spectral_power() const {
+//     Field spectral(*this);
+//     spectral.fft_inplace();
+
+//     for (int i = 0; spectral.size(); i++)
+//         spectral[i] = spectral[i] * spectral[i];
+
+//     return spectral;
+// }
+
+Polarizations Polarizations::operator*(const Complex& multiplier) const {
+    return Polarizations{x * multiplier, y * multiplier};
 }
 
-Field& Field::spectral_power() const {
-    Field spectral(*this);
-    spectral.fft_inplace();
+Polarizations Polarizations::operator*(const Field& multipliers) const {
+    return Polarizations{x * multipliers, y * multipliers};
+}
 
-    for(int i = 0; spectral.size(); i++)
-        spectral[i] = spectral[i]*spectral[i];
+Polarizations& Polarizations::operator*=(const Complex& multiplier) {
+    x *= multiplier;
+    y *= multiplier;
 
-    return spectral;
+    return *this;
+}
+
+Polarizations& Polarizations::operator*=(const Field& multipliers) {
+    x *= multipliers;
+    y *= multipliers;
+
+    return *this;
 }
 
 Field convolution(const Field& x, const Field& y) {
     Field z(x.size() + y.size() - 1);
     for (int i = 0; i < x.size(); ++i)
-        for (int j = 0; j < y.size(); ++j) z[i + j] += x[i] * y[j];
+        for (int j = 0; j < y.size(); ++j)
+            z[i + j] += x[i] * y[j];
 
     return z;
 }
 
-Complex i_exp(double x) {
-    return Complex(cos(x), sin(x));
-}
-
-Complex i_exp(Complex x) {
-    return Complex(cos(x.real()), sin(x.imag()));
-}
+Complex i_exp(const double& phi) { return Complex(cos(phi), sin(phi)); }

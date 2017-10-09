@@ -1,41 +1,58 @@
 #include "system.h"
 
-System& System::add(Module *module) {
-	modules.push_back(module);
+#include <iostream>
 
-	return *this;
+System& System::add(Module* module) {
+    modules.push_back(module);
+
+    return *this;
 }
 
 System& System::clear(bool remove_modules = 0) {
-	if (remove_modules)
-		modules.clear();
-	if (!storage.empty())
-		storage.clear();
-	
-	return *this;
+    modules.clear();
+    return *this;
 }
 
 System& System::remove(int module_num) {
-	modules.erase(modules.begin()+(module_num - 1));
-	clear(false);
-	return *this;
+    modules.erase(modules.begin() + (module_num - 1));
+    return *this;
 }
 
 Field System::execute(Field& signal) {
-	clear();
+    if (modules.empty()) return signal;
 
-	if (modules.empty()) return signal;
+    for (unsigned long i = 0; i < modules.size(); ++i)
+        modules[i]->execute(signal);
 
-	storage.push_back(signal);
-	for(int i = 0; i < modules.size(); i++)
-	{
-		modules[i]->execute(signal);
-		storage.push_back(signal);
-	}
-
-	return signal;
+    return signal;
 }
 
-Field System::current_state() {
-	return storage.back();
+// std::vector<Field> System::execute(std::vector<Field>& signal) {
+//     if (modules.empty()) return signal;
+
+//     for (unsigned long i = 0; i < modules.size(); ++i)
+//         modules[i]->execute(signal);
+
+//     return signal;
+// }
+
+Polarizations System::execute(Polarizations& signal)  {
+    if (modules.empty()) return signal;
+
+    for (unsigned long i = 0; i < modules.size(); ++i)
+        modules[i]->execute(signal);
+
+    return signal;
 }
+
+// Field System::current_state() {
+//     // temp_debuger();
+//     return cur_signal;
+// }
+
+// void System::output_state(std::ostream& os) const {
+//     for (unsigned long i = 0; i < cur_signal.size(); i++)
+//         os << cur_signal[i].real() << '\t' << cur_signal[i].imag()
+//            << '\n';
+//     os << std::flush;
+// }
