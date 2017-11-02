@@ -2,57 +2,37 @@
 #include <iostream>
 #include <string>
 
-#include "lib/fiber.h"
-#include "lib/field.h"
-#include "lib/system.h"
-#include "lib/utility.h"
+#include "src/core.h"
+#include "src/modulations.h"
+#include "src/modules_pack.h"
 
 // reference units [m], [s], [W]
-const double distance = 1e5;         // [m]
-const double attenuation = 2e-4;     // [dB/m]
-const double dispersion = 1.7e-5;    // [s/m/m]
-const double wavelength = 1.55e-6;   // [m]
-const double nonlinearity = 1.4e-3;  // [1/W/m]
-const int pulse_width = 1024;        // [1]
 
-Field sech_pulse(const int& nodes_quantity, const double& width) {
-    Field pulse(nodes_quantity, 0);
-    double argument;
-    for (int i = 0; i < nodes_quantity; i++) {
-        argument = double(i) / (nodes_quantity - 1.0);
-        argument = 20 * argument - 20 / 2.0;
-        pulse[i] = 1.0 / std::cosh(argument / width);
-        pulse[i] /= width;
-    }
+const double refractive_index = 1.45;
+const double gain = 40;
+const double E_satG = 4.933412967;
 
-    return pulse;
-}
+const double wavelength = 1.885e-9;  // [km] // 1.55e-6;  // [m]
+const double sampling_rate = 4096;
+const int fft_steps = 10;
 
-Field rrc_filter(const double& roll_off,
-                 const unsigned long& width,
-                 const unsigned long& osf) {
-    Field filter(width * osf, 0);
+// const double length = 1e5;           // [m]
+// const double attenuation = 2e-4;      // [dB/m]
+// const double dispersion = 1.7e-5;    // [s/m/m]
+// const double beta2 = disp_to_beta2(dispersion, wavelength);    // [s^2/m]
+// const double nonlinearity = 1.4e-3;  // [1/W/m]
 
-    for (unsigned long i = 0; i < width * osf; ++i) {
-        double t = double(i) / osf - width / 2.0;
+const double length = 0.6e-3;    // [km]
+const double attenuation = 14;  // [dB/km] // needs convert to natural
+const double dispersion = 74;   // [s/km/km]
+const double beta2 = disp_to_beta2(dispersion, wavelength);  // [s^2/km]
+const double nonlinearity = 0.78;                            // [1/W/km]
 
-        if (t == 0) {
-            filter[i] = 1 - roll_off + 4 * roll_off / M_PI;
-        } else if (std::abs(t) == 0.25 / roll_off) {
-            filter[i] += (1 + 2 / M_PI) * std::sin(0.25 * M_PI / roll_off);
-            filter[i] += (1 - 2 / M_PI) * std::cos(0.25 * M_PI / roll_off);
-            filter[i] *= roll_off / std::sqrt(2.0);
-        } else {
-            filter[i] += std::cos(M_PI * t * (1 + roll_off));
-            filter[i] *= 4 * roll_off * t;
-            filter[i] += std::sin(M_PI * t * (1 - roll_off));
-            filter[i] /= 1 - 16 * roll_off * roll_off * t * t;
-            filter[i] /= M_PI * t;
-        }
-    }
-
-    return filter *= 1.0 / filter.peak_power();
-}
+const double length_th = 1e-3;                                     // [km]
+const double attenuation_th = 2.54e3;                               // [dB/km]
+const double dispersion_th = 76;                                  // [s/km/km]
+const double beta2_th = disp_to_beta2(dispersion_th, wavelength);  // [s^2/km]
+const double nonlinearity_th = 0.78;                               // [1/W/km]
 
 void output_state(std::ostream& os, Field& signal) {
     for (unsigned long i = 0; i < signal.size(); i++)
@@ -61,35 +41,92 @@ void output_state(std::ostream& os, Field& signal) {
 }
 
 void output_state(std::ostream& os, Polarizations& signal) {
-    for (unsigned long i = 0; i < signal.x.size(); i++) {
-        os << signal.x[i].real() << '\t' << signal.x[i].imag() << '\n';
-        os << signal.y[i].real() << '\t' << signal.y[i].imag() << '\n';
-    }
+    for (unsigned long i = 0; i < signal.right.size(); i++)
+        os << signal.right[i].real() << '\t' << signal.right[i].imag() << '\t'
+           << signal.left[i].real() << '\t' << signal.left[i].imag() << '\n';
+    os << std::flush;
+}
+
+void output_state(std::ostream& os, Field* signal) {
+    for (unsigned long i = 0; i < signal->size(); i++)
+        os << norm((*signal)[i]) << '\n';
+    os << std::flush;
+}
+
+void output_state(std::ostream& os, Polarizations* signal) {
+    for (unsigned long i = 0; i < signal->right.size(); i++)
+        os << norm(signal->right[i]) << '\t' << norm(signal->left[i]) << '\n';
     os << std::flush;
 }
 
 int main() {
-    System main_sys;
-    Fiber fiber(wavelength);
-    fiber.setAttenuation(db_to_natural(attenuation));
-    fiber.setDispersion(disp_to_beta2(dispersion, wavelength));
-    fiber.setNonlinearity(nonlinearity);
-    fiber.setFiberLength(100000);
-    fiber.setTotalSteps(1000);
-    fiber.setSamplingRate(32e9);
+    std::ofstream logs("logs.csv", std::ofstream::out | std::ofstream::trunc);
+    logs << "#|E_+|,\t|E_-|" << std::endl;
 
-    main_sys.add(&fiber);
-    // rrc_filter(0.01, 1024, 16)
-    Polarizations sech = {sech_pulse(16384, 1), sech_pulse(16384, 0.5)};
+    Fiber* fiber = new Fiber(wavelength);
+    Fiber* Th_fiber = new Fiber(wavelength);
+    TDFA* tdfa = new TDFA(db_to_natural(gain) / length_th, E_satG);
+    DWNT* dwnt = new DWNT();
+    QWP* qwp = new QWP();
+    PD_ISO* pbs = new PD_ISO();
+    Logger* logger = new Logger();
+    Coupler* coupler = new Coupler(logger);
+    Counter* counter = new Counter();
 
-    main_sys.execute(sech);
+    fiber->setAttenuation(db_to_natural(attenuation));
+    fiber->setDispersion(beta2);
+    fiber->setNonlinearity(nonlinearity);
+    fiber->setFiberLength(length);
+    fiber->setTotalSteps(fft_steps);
 
-    std::ofstream fout_x("out_x.txt"), fout_y("out_y.txt");
+    Th_fiber->setAttenuation(db_to_natural(attenuation_th));
+    Th_fiber->setDispersion(beta2_th);
+    Th_fiber->setNonlinearity(nonlinearity_th);
+    Th_fiber->setFiberLength(length_th);
+    Th_fiber->setTotalSteps(fft_steps);
 
-    output_state(fout_x, sech);
-    output_state(fout_y, sech);
-    fout_x.close();
-    fout_y.close();
-    
+    Polarizations* sech = new Polarizations;
+    *sech = {sech_pulse(16384, 1), sech_pulse(16384, 1)};
+    sech->right.setSamplingRate(sampling_rate);
+    sech->left.setSamplingRate(sampling_rate);
+
+    System sys;
+    sys
+        .add(tdfa)
+        .add(Th_fiber)
+        .add(fiber)
+        .add(pbs)
+        .add(fiber)
+        //.add(qwp)
+        .add(fiber)
+        .add(coupler)
+        .add(fiber)
+        .add(dwnt);
+
+    coupler->setOuput(logger);
+
+    // output_state(logs, sech);
+    // Th_fiber->execute(sech);
+    // tdfa->execute(sech);
+    // fiber->execute(sech);
+    // dwnt->execute(sech);
+    // pbs->execute(sech);
+    // coupler->execute(sech);
+    // qwp->execute(sech);
+
+    // logs << "\n" << std::endl;
+    // output_state(logs, sech);
+
+    sys.printModules();
+    while (sys.getCount() < 100)
+        sys.execute(sech);
+    std::cout << "Propogation finished" << std::endl;
+    std::cout << "Getting logs.." << std::endl;
+    // logger->getFirstNLast(logs);
+    logger->getLogs(logs);
+    std::cout << "File successfully saved" << std::endl;
+
+    logs.close();
+
     return 0;
 }

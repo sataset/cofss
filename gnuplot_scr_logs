@@ -1,0 +1,7 @@
+stats "logs.csv"
+
+do for [j=0:STATS_blocks] {
+plot "logs.csv" index j u 0:1 w lines , \
+"logs.csv" index j u 0:2 w lines
+pause -1
+}
