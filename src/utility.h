@@ -10,8 +10,6 @@ const double math_pi = 3.141592653589793;
 const double planck = 6.62607004081e-34;
 const double light_speed = 299792458;
 
-void relax_max(double& a, const double& b);
-void relax_mix(double& a, const double& b);
 double sinc(const double& x);
 
 double db_to_linear(const double& db_value);

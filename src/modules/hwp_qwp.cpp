@@ -3,21 +3,22 @@
 
 HWP_QWP::HWP_QWP() {
     name = "quarter_wp";
-    psy = 0.056;
+    psi = 0.056;
     xi = 0.1;
 }
 
-HWP_QWP::HWP_QWP(const double& psy, const double& xi) {
-    this->psy = psy;
-    this->xi = xi;
+HWP_QWP::HWP_QWP(const double& in_psi, const double& in_xi) {
+    name = "quarter_wp";
+    psi = in_psi;
+    xi = in_xi;
 }
 
 void HWP_QWP::execute(Field* signal) {}
 
 void HWP_QWP::execute(Polarizations* signal) {
     Field E_1 = signal->x();
-    signal->right = E_1 * i_exp(psy) * std::cos(xi - M_PI / 4.0);
-    signal->left = E_1 * i_exp(psy) * std::cos(xi + M_PI / 4.0);
+    signal->right = E_1 * i_exp(psi) * std::cos(xi - math_pi / 4.0);
+    signal->left = E_1 * i_exp(psi) * std::cos(xi + math_pi / 4.0);
 
     //Executor::instance()->enqueue(next, signal);
 }

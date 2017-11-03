@@ -29,7 +29,13 @@
 
 // g (E_±) = g_0 / (1 + E_± / E_satG)
 class TDFA : public Module {
-    double gain, E_satG;
+    double satGain, E_satG;
+
+    double alpha;
+    double beta2, beta3;
+    double gamma;
+    double length;
+    int total_steps;
 
   public:
     TDFA();
@@ -37,11 +43,24 @@ class TDFA : public Module {
          const double& saturation_power,
          const double& cavity_roundtrip_time);
 
-    TDFA(const double& small_signal_gain,
-         const double& saturation_energy);
+    TDFA(const double& small_signal_gain, const double& saturation_energy);
+
+    void setAttenuation(const double& in_alpha);
+    void setGain(double (*gain_function)(const Field*));
+    void setDispersion(const double& in_beta2);
+    void setDispersion(const double& in_beta2, const double& in_beta3);
+    void setNonlinearity(const double& in_gamma);
+    void setSatGain(const double& small_signal_gain);
+    void setSaturationEnergy(const double& saturation_energy);
+    void setFiberLength(const double& in_length);
+    void setTotalSteps(const int& steps);
 
     void execute(Field* signal);
     void execute(Polarizations* signal);
+
+  private:
+    Field estimateLinearity(Field* signal) const;
+    Field estimateLinearity(Field& signal) const;
 };
 
-#endif  // TDF_H_
+#endif  // TDFA_H_

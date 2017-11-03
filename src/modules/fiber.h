@@ -6,26 +6,24 @@
 
 class Fiber : public Module {
     double alpha;
+    // double (*gain)(const Field*);
     double beta2, beta3;
     double gamma;
     double length;
-    double wavelength;
     int total_steps;
 
   public:
     Fiber();
-    Fiber(const double& center_wavelength);
-    void setAttenuation(const double& alpha);
-    void setAttenuationDB(const double& alpha_dB);
-    void setDispersion(const double& beta2);
-    void setDispersion(const double& beta2, const double& beta3);
-    void setNonlinearity(const double& gamma);
-    void setFiberLength(const double& length);
+    void setAttenuation(const double& in_alpha);
+    // void setGain(double (*gain_function)(const Field*));
+    void setDispersion(const double& in_beta2);
+    void setDispersion(const double& in_beta2, const double& in_beta3);
+    void setNonlinearity(const double& in_gamma);
+    void setFiberLength(const double& in_length);
     void setTotalSteps(const int& steps);
 
     void execute(Field* signal);
     void execute(Polarizations* signal);
-    //void execute(std::vector<Field>& signal);
 
   private:
     Field estimateLinearity(Field* signal) const;

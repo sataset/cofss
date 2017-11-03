@@ -9,6 +9,7 @@ Coupler::Coupler() {
 Coupler::Coupler(Module* output) {
     name = "coupler";
     this->output = output;
+    transmission = 0.6;
 }
 
 // void Coupler::execute(Field* signal) {

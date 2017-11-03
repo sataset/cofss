@@ -1,13 +1,5 @@
 #include "utility.h"
 
-void relax_max(double& a, const double& b) {
-    if (a < b) a = b;
-}
-
-void relax_mix(double& a, const double& b) {
-    if (a > b) a = b;
-}
-
 double sinc(const double& x) {
     if (x == 0) return 1;
     return std::sin(M_PI * x) / M_PI / x;

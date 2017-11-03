@@ -10,7 +10,7 @@ class Module {
     std::string name;
     Module* next;
 
-    void setName(std::string name);
+    void setName(std::string in_name);
     std::string getName();
     void setNextModule(Module* nextModule);
 

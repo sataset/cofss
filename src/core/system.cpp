@@ -8,7 +8,7 @@ System& System::add(Module* module) {
     return *this;
 }
 
-System& System::clear(bool remove_modules = 0) {
+System& System::clear() {
     modules.clear();
     return *this;
 }
@@ -25,25 +25,16 @@ void System::printModules() {
     std::cout << modules.back()->getName() << std::endl;
 }
 
-// std::vector<Field> System::execute(std::vector<Field>& signal) {
-//     if (modules.empty()) return signal;
-
-//     for (unsigned long i = 0; i < modules.size(); ++i)
-//         modules[i]->execute(signal);
-
-//     return signal;
-// }
-
 Field* System::execute(Field* signal) {
     if (modules.empty()) return signal;
 
-    for (unsigned long i = 0; i < modules.size(); ++i){
+    for (unsigned long i = 0; i < modules.size(); ++i) {
         modules[i]->execute(signal);
-        //std::cout << modules[i]->getName() << " success" << std::endl;
+        // std::cout << modules[i]->getName() << " success" << std::endl;
     }
 
-    std::cout << "Cycle: " << counter << std::endl;
     counter++;
+    std::cout << "Cycle " << counter << " - success!" << std::endl;
 
     return signal;
 }
@@ -51,21 +42,16 @@ Field* System::execute(Field* signal) {
 Polarizations* System::execute(Polarizations* signal) {
     if (modules.empty()) return signal;
 
-    for (unsigned long i = 0; i < modules.size(); ++i){
+    for (unsigned long i = 0; i < modules.size(); ++i) {
         modules[i]->execute(signal);
-        //std::cout << modules[i]->getName() << " success" << std::endl;
+        // std::cout << modules[i]->getName() << " success" << std::endl;
     }
 
-    std::cout << "Cycle: " << counter << std::endl;
     counter++;
+    std::cout << "Cycle " << counter << " - success!" << std::endl;
 
     return signal;
 }
 
 unsigned long System::getCount() { return counter; }
 void System::resetCount() { counter = 0; }
-
-// Field System::current_state() {
-//     // temp_debuger();
-//     return cur_signal;
-// }

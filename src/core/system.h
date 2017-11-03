@@ -15,16 +15,14 @@ class System {
     System(){ stop_flag = 0; counter = 0; };
 
     System& add(Module* module);
-    System& clear(bool remove_modules);
+    System& clear();
     System& remove(int module_num);
     void printModules();
     Field* execute(Field* signal);
 	Polarizations* execute(Polarizations* signal);
-	//std::vector<Field> execute(std::vector<Field>& signal);
 
     unsigned long getCount();
     void resetCount();
-	// Field current_state();
 };
 
 #endif  // SYSTEM_H

@@ -2,7 +2,7 @@
 
 void Module::setNextModule(Module* nextModule) { next = nextModule; }
 
-void Module::setName(std::string name) { this->name = name; }
+void Module::setName(std::string in_name) { name = in_name; }
 std::string Module::getName() { return name; }
 
 // void Module::forward(Field* signal) {

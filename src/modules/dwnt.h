@@ -26,7 +26,7 @@
 // sig *= 1 - alpha
 
 class DWNT : public Module {
-    double alpha_0, alpha_ns, P_peakSat;
+    double alpha_0, alpha_ns, P_sat;
 
   public:
     DWNT();

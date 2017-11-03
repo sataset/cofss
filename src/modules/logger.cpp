@@ -29,9 +29,10 @@ Logger::Logger() { name = "logger"; }
 void Logger::getLogs(std::ostream& os) {
     unsigned long size = 0;
     size = storage.back().right.size();
+    os.precision(15);
     for (unsigned long i = 0; i < storage.size(); ++i) {
         for (unsigned long j = 0; j < size; ++j)
-            os << sqrt(norm(storage[i].right[j])) << ",\t"
+            os << sqrt(norm(storage[i].right[j])) << ","
                << sqrt(norm(storage[i].left[j])) << std::endl;
         os << '\n' << std::endl;
     }
@@ -40,14 +41,14 @@ void Logger::getLogs(std::ostream& os) {
 void Logger::getFirstNLast(std::ostream& os) {
     unsigned long size = 0;
     size = storage.back().right.size();
-
+    os.precision(15);
     for (unsigned long i = 0; i < size; ++i)
-        os << sqrt(norm(storage.front().right[i])) << ",\t"
+        os << sqrt(norm(storage.front().right[i])) << ","
            << sqrt(norm(storage.front().left[i])) << std::endl;
     os << '\n' << std::endl;
 
     for (unsigned long i = 0; i < size; ++i)
-        os << sqrt(norm(storage.back().right[i])) << ",\t"
+        os << sqrt(norm(storage.back().right[i])) << ","
            << sqrt(norm(storage.back().left[i])) << std::endl;
     os << '\n' << std::endl;
 }

@@ -5,26 +5,26 @@ C++ based optical fiber system simulator
 
 Structure:
 - Core
- - System
-  - Modules container
- - Module
-  - Abstract class to define other modules easily and give them OOP features
- - Field
-  - dt, df, dw, f, w, fft, ifft
-  - peak / average power
-  - Polarizations
-   - right, left elliptic polarizations
-   - linear and orthogonal polarizations
- - Executor (in progress)
-  - Singleton pattern to create decentralized system for easier lazy / parallel processing
+  - System
+     - Modules container
+  - Module
+     - Abstract class to define other modules easily and give them OOP features
+  - Field
+     - dt, df, dw, f, w, fft, ifft
+     - peak / average power
+     - Polarizations
+         - right, left elliptic polarizations
+         - linear and orthogonal polarizations
+  - Executor (in progress)
+     - Singleton pattern to create decentralized system for easier lazy / parallel processing
 - Modules
- - Fiber
- - TDFA (bad model. Needs fixing)
- - QWP + HWP
- - PD ISO / PBS
- - DWNT SA (Simple model)
- - Coupler
- - Counter (needs system upgrade)
- - Logger (part of Coupler module)
+  - Fiber
+   - TDFA (bad model. Needs fixing)
+   - QWP + HWP
+   - PD ISO / PBS
+   - DWNT SA (Simple model)
+   - Coupler
+   - Counter (needs system upgrade)
+   - Logger (part of Coupler module. Can work standalone in System, but not in Executor model)
 - Utility (converters and additional functions)
 - Modulations (currently only sech)

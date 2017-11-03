@@ -262,8 +262,8 @@ Polarizations& Polarizations::operator*=(const Field& multipliers) {
 
 Field convolution(const Field& x, const Field& y) {
     Field z(x.size() + y.size() - 1);
-    for (int i = 0; i < x.size(); ++i)
-        for (int j = 0; j < y.size(); ++j)
+    for (unsigned long i = 0; i < x.size(); ++i)
+        for (unsigned long j = 0; j < y.size(); ++j)
             z[i + j] += x[i] * y[j];
 
     return z;
