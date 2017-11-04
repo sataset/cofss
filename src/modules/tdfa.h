@@ -29,7 +29,7 @@
 
 // g (E_±) = g_0 / (1 + E_± / E_satG)
 class TDFA : public Module {
-    double satGain, E_satG;
+    double satGain, E_satG, T_R, P_satG;
 
     double alpha;
     double beta2, beta3;
@@ -43,7 +43,7 @@ class TDFA : public Module {
          const double& saturation_power,
          const double& cavity_roundtrip_time);
 
-    TDFA(const double& small_signal_gain, const double& saturation_energy);
+    // TDFA(const double& small_signal_gain, const double& saturation_energy);
 
     void setAttenuation(const double& in_alpha);
     void setGain(double (*gain_function)(const Field*));

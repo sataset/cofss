@@ -13,19 +13,6 @@ TDFA::TDFA() {
     total_steps = 1;
 }
 
-TDFA::TDFA(const double& small_signal_gain, const double& saturation_energy) {
-    name = "tdfa";
-
-    alpha = 0;
-    beta2 = 0;
-    gamma = 0;
-    length = 1;
-    total_steps = 1;
-
-    satGain = small_signal_gain;
-    E_satG = saturation_energy;
-}
-
 TDFA::TDFA(const double& small_signal_gain,
            const double& saturation_power,
            const double& cavity_roundtrip_time) {
@@ -38,8 +25,24 @@ TDFA::TDFA(const double& small_signal_gain,
     total_steps = 1;
 
     satGain = small_signal_gain;
-    E_satG = saturation_power * cavity_roundtrip_time;
+    P_satG = saturation_power;
+    T_R = cavity_roundtrip_time;
+    E_satG = T_R * P_satG;
 }
+
+// TDFA::TDFA(const double& small_signal_gain, const double& saturation_energy)
+// {
+//     name = "tdfa";
+
+//     alpha = 0;
+//     beta2 = 0;
+//     gamma = 0;
+//     length = 1;
+//     total_steps = 1;
+
+//     satGain = small_signal_gain;
+//     E_satG = saturation_energy;
+// }
 
 void TDFA::setAttenuation(const double& in_alpha) { alpha = in_alpha; }
 
@@ -73,8 +76,8 @@ Field TDFA::estimateLinearity(Field* signal) const {
 
     Field linearity(samples, 0);
     for (unsigned long i = 0; i < samples; ++i) {
-        linearity[i] = i_exp(beta2 / 2.0 * signal->w(i) * signal->w(i) * step);
-        linearity[i] *= exp(-alpha * step / 2.0);
+        linearity[i] = i_exp(beta2 * 0.5 * signal->w(i) * signal->w(i) * step);
+        linearity[i] *= exp(-alpha * step * 0.5);
     }
 
     return linearity;
@@ -86,8 +89,8 @@ Field TDFA::estimateLinearity(Field& signal) const {
     Field linearity(samples, 0);
 
     for (unsigned long i = 0; i < samples; ++i) {
-        linearity[i] = i_exp(beta2 / 2.0 * signal.w(i) * signal.w(i) * step);
-        linearity[i] *= exp(-alpha * step / 2.0);
+        linearity[i] = i_exp(beta2 * 0.5 * signal.w(i) * signal.w(i) * step);
+        linearity[i] *= exp(-alpha * step * 0.5);
     }
 
     return linearity;
@@ -98,15 +101,15 @@ void TDFA::execute(Field* signal) {
     double step = length / double(total_steps);
     Field linearity = estimateLinearity(signal);
 
-    double energy = signal->average_power() * signal->size() * signal->dt();
-    double gain = satGain / (1.0 + energy / E_satG);
+    double energy = signal->average_power() * signal->size() * T_R;
+    double gain = sqrt(exp(satGain * step * 0.5 / (1.0 + energy / E_satG)));
 
     for (unsigned long j = 0; j < samples; ++j)
         (*signal)[j] *= i_exp(gamma * step * norm((*signal)[j]) / 2.0);
 
     for (unsigned long i = 0; i < total_steps; ++i) {
         signal->fft_inplace();
-        (*signal) *= (linearity * exp(gain));
+        (*signal) *= (linearity * exp(gain * step * 0.5));
         signal->ifft_inplace();
 
         for (unsigned long j = 0; j < samples; ++j)
@@ -119,6 +122,8 @@ void TDFA::execute(Field* signal) {
     // Executor::instance()->enqueue(next, signal);
 }
 
+#include <iostream>
+
 void TDFA::execute(Polarizations* signal) {
     unsigned long samples = signal->right.size();
     double step = length / double(total_steps);
@@ -126,8 +131,8 @@ void TDFA::execute(Polarizations* signal) {
 
     double energy =
         (signal->right.average_power() + signal->left.average_power()) *
-        signal->right.size() * signal->right.dt();
-    double gain = satGain / (1.0 + energy / E_satG);
+        signal->right.size() * T_R;
+    double gain = sqrt(exp(satGain * step * 0.5 / (1.0 + energy / E_satG)));
 
     std::vector<double> kappa = {-2. / 3., -4. / 3.};
     double phi_x, phi_y;
@@ -145,7 +150,7 @@ void TDFA::execute(Polarizations* signal) {
         signal->right.fft_inplace();
         signal->left.fft_inplace();
 
-        (*signal) *= (linearity * exp(gain));
+        (*signal) *= (linearity * exp(gain * step * 0.5));
 
         signal->right.ifft_inplace();
         signal->left.ifft_inplace();
