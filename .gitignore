@@ -60,4 +60,4 @@ Temporary Items
 .apdisk
 
 # Logs
-.csv
+*.csv
