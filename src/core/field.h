@@ -38,7 +38,7 @@ class Field : public ComplexVector {
     Field& operator*=(const Field& multipliers);
 
     Field operator/(const Complex& divider) const;
-    Field operator/(const Field& dividers) const;
+    //Field operator/(const Field& dividers) const;
     Field& operator/=(const Complex& divider);
 
     void setSamplingRate(const double& rate);

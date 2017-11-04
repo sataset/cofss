@@ -107,16 +107,16 @@ Field Field::operator/(const Complex& divider) const {
     return copy;
 }
 
-Field Field::operator/(const Field& dividers) const {
-    Field copy(*this);
-    if (size() == dividers.size())
-        for (unsigned long i = 0; i < copy.size(); ++i)
-            copy[i] /= dividers[i];
-    else
-        throw std::logic_error("fields size mismatch");
+// Field Field::operator/(const Field& dividers) const {
+//     Field copy(*this);
+//     if (size() == dividers.size())
+//         for (unsigned long i = 0; i < copy.size(); ++i)
+//             copy[i] /= dividers[i];
+//     else
+//         throw std::logic_error("fields size mismatch");
 
-    return copy;
-}
+//     return copy;
+// }
 
 Field& Field::operator/=(const Complex& divider) {
     for (unsigned long i = 0; i < size(); ++i)
