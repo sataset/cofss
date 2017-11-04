@@ -1,3 +1,5 @@
+#set terminal gif animate delay 100
+#set output 'foobar.gif'
 stats "logs.csv"
 
 do for [j=0:STATS_blocks] {
