@@ -17,7 +17,7 @@ void output_state(std::ostream& os, Polarizations* signal);
 // Dispersion   [ps/km/km]
 // beta_2       [ps^2 / km]
 // Nonlinearity [1/W/km]
-const double wavelength = 1.885e-9;   // [km] // 1.55e-6;  // [m]
+const double center_wavelength = 1.885e-9;   // [km] // 1.55e-6;  // [m]
 const double pulse_duration = 100.0;  // [ps]
 const double time_steps = 8192;
 const int fft_steps = 4000;
@@ -26,7 +26,7 @@ const int fft_steps = 4000;
 const double length = 0.6e-3;  // [km]
 const double attenuation =
     db_to_natural(14);             // [dB/km] // needs convert to natural
-const double beta_2 = 74;          // [s^2/km]
+const double beta_2 = 74;          // [ps^2/km]
 const double nonlinearity = 0.78;  // [1/W/km]
 
 // Th-Doped Fiber Parameters
@@ -35,7 +35,7 @@ const double attenuation_th = db_to_natural(2.54e3);
 const double beta_2_th = 76;
 const double nonlinearity_th = 0.78;
 
-const double satGain = db_to_natural(40.0 / 1e-3);  // [dB/km]
+const double satGain = db_to_natural(40.0 / length_th);  // [dB/km]
 const double refractive_index = 1.45;
 const double total_cavity_length = 4.0 * length + length_th;
 const double cavity_roundtrip_time =
@@ -56,7 +56,7 @@ int main() {
     logs << "#|E_+|,\t|E_-|" << std::endl;
 
     Fiber* fiber = new Fiber();
-    TDFA* tdfa = new TDFA(satGain, E_satG);
+    TDFA* tdfa = new TDFA(satGain, P_satG, cavity_roundtrip_time);
     DWNT* dwnt = new DWNT(alpha_0, P_sat, alpha_ns);
     HWP_QWP* plates = new HWP_QWP(psi, xi);
     PD_ISO* pbs = new PD_ISO();
@@ -84,8 +84,8 @@ int main() {
 
     System sys;
     sys
-        //.add(logger)
         .add(tdfa)
+        //.add(logger)
         .add(fiber)
         .add(pbs)
         .add(fiber)
@@ -97,13 +97,13 @@ int main() {
         //.add(logger);
 
     sys.printModules();
-    while (sys.getCount() < 3)
+    while (sys.getCount() < 30)
         sys.execute(field);
 
     std::cout << "Propogation finished" << std::endl;
     std::cout << "Getting logs.." << std::endl;
-    logger->getFirstNLast(logs);
-    //logger->getLogs(logs);
+    // logger->getFirstNLast(logs);
+    logger->getLogs(logs);
     std::cout << "File successfully saved" << std::endl;
 
     logs.close();
