@@ -27,37 +27,56 @@ Logger::Logger() { name = "logger"; }
 // }
 
 void Logger::getLogs(std::ostream& os) {
-    unsigned long size = 0;
+    unsigned long size;
     size = storage.back().right.size();
     os.precision(15);
     for (unsigned long i = 0; i < storage.size(); ++i) {
         for (unsigned long j = 0; j < size; ++j)
-            os << sqrt(norm(storage[i].right[j])) << ","
-               << sqrt(norm(storage[i].left[j])) << std::endl;
+            os << storage[i].right.t(j) << ','
+            << storage[i].right[j].real() << ','
+            << storage[i].right[j].imag() << ','
+            << storage[i].left[j].real() << ','
+            << storage[i].left[j].imag() << std::endl;
         os << '\n' << std::endl;
     }
 }
 
 void Logger::getFirstNLast(std::ostream& os) {
-    unsigned long size = 0;
+    unsigned long size;
     size = storage.back().right.size();
     os.precision(15);
     for (unsigned long i = 0; i < size; ++i)
-        os << sqrt(norm(storage.front().right[i])) << ","
-           << sqrt(norm(storage.front().left[i])) << std::endl;
+        os << storage.front().right.t(i) << ','
+        << storage.front().right[i].real() << ','
+        << storage.front().right[i].imag() << ','
+        << storage.front().left[i].real() << ','
+        << storage.front().left[i].imag() << std::endl;
     os << '\n' << std::endl;
 
     for (unsigned long i = 0; i < size; ++i)
-        os << sqrt(norm(storage.back().right[i])) << ","
-           << sqrt(norm(storage.back().left[i])) << std::endl;
+        os << storage.back().right.t(i) << ','
+        << storage.back().right[i].real() << ','
+        << storage.back().right[i].imag() << ','
+        << storage.back().left[i].real() << ','
+        << storage.back().left[i].imag() << std::endl;
+    os << '\n' << std::endl;
+}
+
+void Logger::getCurrentState(std::ostream& os) {
+    unsigned long size;
+    size = storage.back().right.size();
+    os.precision(15);
+      for (unsigned long i = 0; i < size; ++i)
+        os << storage.back().right.t(i) << ','
+        << storage.back().right[i].real() << ','
+        << storage.back().right[i].imag() << ','
+        << storage.back().left[i].real() << ','
+        << storage.back().left[i].imag() << std::endl;
     os << '\n' << std::endl;
 }
 
 void Logger::execute(Field* signal) {
-    storage.push_back(
-        Polarizations{*signal, Field(signal->size(), 0)});
+    storage.push_back(Polarizations{*signal, Field(signal->size(), 0)});
 }
 
-void Logger::execute(Polarizations* signal) {
-    storage.push_back(*signal);
-}
+void Logger::execute(Polarizations* signal) { storage.push_back(*signal); }

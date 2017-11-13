@@ -13,6 +13,7 @@ class Logger : public Module {
     //void getLogs(std::ostream& os, bool for_field);
     void getLogs(std::ostream& os);
     void getFirstNLast(std::ostream& os);
+    void getCurrentState(std::ostream& os);
 
     void execute(Field* signal);
     void execute(Polarizations* signal);
