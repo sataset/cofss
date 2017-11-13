@@ -124,10 +124,15 @@ Field& Field::operator/=(const Complex& divider) {
     return *this;
 }
 
-void Field::setSamplingRate(const double& rate) {
-    sampling_rate = rate;
+void Field::setTimeStep(const double& time_step) {
+    time_step_ = time_step;
+
     unsigned long samples = size();
-    omega.assign(samples, 2.0 * M_PI * rate / samples);
+    time.assign(samples, 0);
+    omega.assign(samples, 2.0 * M_PI / time_step_ / samples);
+
+    for (unsigned long i = 0; i < samples; ++i)
+        time[i] = double(i) * time_step_;
 
     for (unsigned long i = 0; i <= samples / 2; ++i)
         omega[i] *= double(i);
@@ -137,15 +142,36 @@ void Field::setSamplingRate(const double& rate) {
     }
 }
 
-double Field::getSamplingRate() const { return sampling_rate; }
+void Field::setSamplingRate(const double& rate) {
+    time_step_ = 1.0 / rate;
+    unsigned long samples = size();
+    time.assign(samples, 0);
+    omega.assign(samples, 2.0 * M_PI / time_step_ / samples);
 
-double Field::dt() const { return 1.0 / sampling_rate; }
+    for (unsigned long i = 0; i < samples; ++i)
+        time[i] = double(i) * time_step_;
 
-double Field::df() const { return sampling_rate / size(); }
+    for (unsigned long i = 0; i <= samples / 2; ++i)
+        omega[i] *= double(i);
 
-double Field::dw() const { return 2.0 * M_PI * sampling_rate / size(); }
+    for (unsigned long i = samples / 2 + 1; i < samples; ++i) {
+        omega[i] *= double(i) - double(samples);
+    }
+}
 
-double Field::f(const unsigned long& i) const { return omega[i] / (2 * M_PI); }
+double Field::getSamplingRate() const { return 1.0 / time_step_; }
+
+double Field::dt() const { return time_step_; }
+
+double Field::df() const { return 1.0 / time_step_ / size(); }
+
+double Field::dw() const { return 2.0 * M_PI / time_step_ / size(); }
+
+double Field::t(const unsigned long& i) const { return time[i]; }
+
+double Field::f(const unsigned long& i) const {
+    return omega[i] / (2.0 * M_PI);
+}
 
 double Field::w(const unsigned long& i) const { return omega[i]; }
 
@@ -257,6 +283,17 @@ Polarizations& Polarizations::operator*=(const Field& multipliers) {
     right *= multipliers;
     left *= multipliers;
 
+    return *this;
+}
+
+Polarizations& Polarizations::fft_inplace() {
+    right.fft_inplace();
+    left.fft_inplace();
+    return *this;
+}
+Polarizations& Polarizations::ifft_inplace() {
+    right.ifft_inplace();
+    left.ifft_inplace();
     return *this;
 }
 

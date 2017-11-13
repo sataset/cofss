@@ -14,8 +14,9 @@ typedef std::vector<double> RealVector;
 const Complex i_unit = Complex(0, 1);
 
 class Field : public ComplexVector {
-    double sampling_rate;
+    double time_step_;
     RealVector omega;
+    RealVector time;
 
   public:
     using ComplexVector::vector;
@@ -41,11 +42,13 @@ class Field : public ComplexVector {
     //Field operator/(const Field& dividers) const;
     Field& operator/=(const Complex& divider);
 
+    void setTimeStep(const double& time_step);
     void setSamplingRate(const double& rate);
     double getSamplingRate() const;
     double dt() const;
     double df() const;
     double dw() const;
+    double t(const unsigned long& i) const;
     double f(const unsigned long& i) const;
     double w(const unsigned long& i) const;
     RealVector temporal_power() const;
@@ -68,6 +71,9 @@ struct Polarizations {
     Polarizations operator*(const Field& multipliers) const;
     Polarizations& operator*=(const Complex& multiplier);
     Polarizations& operator*=(const Field& multipliers);
+
+    Polarizations& fft_inplace();
+    Polarizations& ifft_inplace();
 };
 
 Field convolution(const Field& x, const Field& y);
