@@ -19,4 +19,12 @@ double disp_to_beta2(const double& dispersion, const double& wavelength);
 
 Complex i_exp(const double& x);
 
+// FWHM - full width at half maximum
+
+Field sech_pulse(const int& nodes_quantity, const double& width);
+Field gaussian(const int& nodes_quantity,
+               const double& peak_power,
+               const double& fwhm,
+               const double& time_window);
+
 #endif  // UTILITY_H_
