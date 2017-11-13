@@ -1,7 +1,8 @@
-plot "logs.csv" index 0 u 0:1 w lines , \
-"logs.csv" index 0 u 0:2 w lines
+plot "logs.csv" index 0 u 0:(sqrt($1*$1 +$2*$2)) w lines , \
+"logs.csv" index 0 u 0:(sqrt($3*$3 +$4*$4)) w lines
 pause -1
-plot "logs.csv" index 1 u 0:1 w lines , \
-"logs.csv" index 1 u 0:2 w lines
+plot "logs.csv" index 1 u 0:(sqrt($1*$1 +$2*$2)) w lines , \
+"logs.csv" index 1 u 0:(sqrt($3*$3 +$4*$4)) w lines
 pause -1
+
 #(sqrt($1*$1 +$2*$2))
