@@ -26,9 +26,10 @@
                 "src/modules/logger.cpp",
                 "src/modules/fiber.cpp",
                 "src/modules/dwnt.cpp",
-                "src/modules/tdfa.cpp",
+                "src/modules/active_fiber.cpp",
                 "src/modules/hwp_qwp.cpp",
                 "src/modules/pd_iso.cpp",
+                "src/modules/amplifier_simple.cpp",
                 "-lfftw3",
                 "-omain.out"
             ],
@@ -72,9 +73,10 @@
                 "src/modules/logger.cpp",
                 "src/modules/fiber.cpp",
                 "src/modules/dwnt.cpp",
-                "src/modules/tdfa.cpp",
+                "src/modules/active_fiber.cpp",
                 "src/modules/hwp_qwp.cpp",
                 "src/modules/pd_iso.cpp",
+                "src/modules/amplifier_simple.cpp",
                 "-lfftw3",
                 "-otest.out"
             ],
