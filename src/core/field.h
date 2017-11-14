@@ -23,6 +23,7 @@ class Field : public ComplexVector {
 
     double peak_power() const;
     double average_power() const;
+    double energy() const;
 
     Field chomp(const unsigned long& at_begin,
                 const unsigned long& at_end) const;

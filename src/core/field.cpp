@@ -16,6 +16,16 @@ double Field::average_power() const {
     return power / size();
 }
 
+double Field::energy() const
+{
+    double energy = norm(at(0)) + norm(at(size() - 1));
+    energy /= 2.0;
+    for (unsigned long i = 1; i < size() - 1; ++i)
+        energy += norm(at(i));
+
+    return energy * time_step_;
+}
+
 Field Field::chomp(const unsigned long& at_begin,
                    const unsigned long& at_end) const {
     Field chomped(size() - at_begin - at_end);
