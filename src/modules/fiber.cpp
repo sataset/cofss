@@ -2,7 +2,6 @@
 
 Fiber::Fiber() {
     name = "fiber";
-    // gain = nullptr;
     alpha = 0;
     beta2 = 0;
     gamma = 0;

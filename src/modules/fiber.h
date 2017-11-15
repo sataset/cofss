@@ -15,7 +15,6 @@ class Fiber : public Module {
   public:
     Fiber();
     void setAttenuation(const double& in_alpha);
-    // void setGain(double (*gain_function)(const Field*));
     void setDispersion(const double& in_beta2);
     void setDispersion(const double& in_beta2, const double& in_beta3);
     void setNonlinearity(const double& in_gamma);
