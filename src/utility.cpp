@@ -18,10 +18,18 @@ double db_to_natural(const double& db_value) {
 }
 
 double disp_to_beta2(const double& dispersion, const double& wavelength) {
-    return -wavelength * wavelength * dispersion / (2 * math_pi * light_speed);
+    return -wavelength * wavelength * dispersion /
+           (2 * math_pi * light_speed::mps);
 }
 
 Complex i_exp(const double& x) { return Complex(std::cos(x), std::sin(x)); }
+
+Field sqrt(const Field& field) {
+    Field copy(field);
+    for (unsigned long i = 0; i < field.size(); ++i)
+        copy[i] = sqrt(field[i].real());
+    return copy;
+}
 
 Field sech_pulse(const int& nodes_quantity, const double& width) {
     Field pulse(nodes_quantity, 0);
@@ -39,17 +47,29 @@ Field sech_pulse(const int& nodes_quantity, const double& width) {
 }
 
 Field gaussian(const int& nodes_quantity,
-               const double& peak_power,
-               const double& fwhm,
-               const double& time_window) {
-    Field pulse(nodes_quantity, peak_power);
-    double step = time_window / nodes_quantity;
-    double argument;
+    const double& peak_power,
+    const double& fwhm,
+    const double& grid_step) {
+    Field pulse(nodes_quantity, sqrt(peak_power));
+    double arg;
     for (int i = 0; i < nodes_quantity; ++i) {
-        argument = time_window / 2.0 - double(i) * step;
-        pulse[i] *=
-            exp(-argument * argument / fwhm / fwhm * 2.0 * log(2.0));
+        arg = grid_step * double((i - nodes_quantity / 2));
+        pulse[i] *= exp(-arg * arg / fwhm / fwhm * 2.0 * log(2.0));
     }
-    pulse.setTimeStep(time_window / nodes_quantity);
+    pulse.setTimeStep(grid_step);
+    return pulse;
+}
+
+Field lorentzian(const int& nodes_quantity,
+    const double& peak_power,
+    const double& fwhm,
+    const double& grid_step) {
+    Field pulse(nodes_quantity, sqrt(peak_power));
+    double arg;
+    for (int i = 0; i < nodes_quantity; ++i) {
+        arg = grid_step * double((i - nodes_quantity / 2));
+        pulse[i] *= 1.0 / (1.0 + 4.0 * arg * arg / fwhm / fwhm);
+    }
+    pulse.setTimeStep(grid_step);
     return pulse;
 }
