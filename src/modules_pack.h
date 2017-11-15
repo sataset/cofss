@@ -8,6 +8,7 @@
 #include "modules/logger.h"
 #include "modules/pd_iso.h"
 #include "modules/hwp_qwp.h"
-#include "modules/tdfa.h"
+#include "modules/active_fiber.h"
+#include "modules/amplifier_simple.h"
 
 #endif  // MODULES_PACK_H_
