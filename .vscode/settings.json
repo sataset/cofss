@@ -1,4 +1,18 @@
 {
+    "editor.minimap.enabled": true,
+    "editor.fontFamily": "Fira Code",
+    "editor.fontLigatures": true,
+    
+    "C_Cpp.clang_format_path": "/usr/bin/clang-format-3.8",
+    "C_Cpp.clang_format_style": "file",
+    "C_Cpp.clang_format_fallbackStyle": "Google",
+    "C_Cpp.intelliSenseEngine": "Default",
+    "clang.cflags": ["-std=c11"],
+    "clang.cxxflags": [
+    "-std=c++11"
+    ],
+    "workbench.colorTheme": "One Dark Pro",
+
     "files.associations": {
         "__split_buffer": "cpp",
         "__tree": "cpp",
@@ -33,6 +47,20 @@
         "__locale": "cpp",
         "cstdlib": "cpp",
         "memory": "cpp",
-        "cmath": "cpp"
+        "cmath": "cpp",
+        "*.tcc": "cpp",
+        "cctype": "cpp",
+        "clocale": "cpp",
+        "cstdint": "cpp",
+        "cstdio": "cpp",
+        "cwchar": "cpp",
+        "cwctype": "cpp",
+        "iostream": "cpp",
+        "istream": "cpp",
+        "limits": "cpp",
+        "ostream": "cpp",
+        "sstream": "cpp",
+        "streambuf": "cpp",
+        "type_traits": "cpp"
     }
 }
