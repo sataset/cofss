@@ -2,13 +2,13 @@
 
 Coupler::Coupler() {
     name = "coupler";
-    output = nullptr;
+    output_ = nullptr;
     transmission = 0.6;
 }
 
 Coupler::Coupler(Module* output) {
     name = "coupler";
-    this->output = output;
+    output_ = output;
     transmission = 0.6;
 }
 
@@ -29,17 +29,17 @@ Coupler::Coupler(Module* output) {
 // }
 
 void Coupler::execute(Field* signal) {
-    output->execute(new Field((*signal) * transmission));
+    output_->execute(new Field((*signal) * transmission));
     (*signal) *= 1.0 - transmission;
 }
 
 void Coupler::execute(Polarizations* signal) {
-    output->execute(new Polarizations((*signal) * transmission));
+    output_->execute(new Polarizations((*signal) * transmission));
     (*signal) *= 1.0 - transmission;
 }
 
 void Coupler::setOuput(Module* module) {
-    output = module;
+    output_ = module;
 }
 
 void Coupler::setTransmission(const double& percentage) {

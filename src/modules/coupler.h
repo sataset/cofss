@@ -8,7 +8,7 @@
 // Second goes to container.
 
 class Coupler : public Module {
-    Module* output;
+    Module* output_;
     double transmission;
   public:
     Coupler();
