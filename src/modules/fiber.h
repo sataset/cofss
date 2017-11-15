@@ -26,8 +26,7 @@ class Fiber : public Module {
     void execute(Polarizations* signal);
 
   private:
-    Field estimateLinearity(Field* signal) const;
-    Field estimateLinearity(Field& signal) const;
+    Field linear_operator(Field* signal) const;
 };
 
 #endif  // FIBER_H_
