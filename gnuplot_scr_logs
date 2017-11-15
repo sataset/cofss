@@ -1,9 +1,10 @@
 #set terminal gif animate delay 100
 #set output 'foobar.gif'
+set datafile separator ", "
 stats "logs.csv"
 
 do for [j=0:STATS_blocks] {
-plot "logs.csv" index j u 0:(sqrt($1*$1 +$2*$2)) w lines , \
-"logs.csv" index j u 0:(sqrt($3*$3 +$4*$4)) w lines
+plot "logs.csv" index j u 1:(sqrt($2*$2 + $3*$3)) w lines , \
+"logs.csv" index j u 1:(sqrt($4*$4 + $5*$5)) w lines
 pause -1
 }
