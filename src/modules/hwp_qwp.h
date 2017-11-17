@@ -9,11 +9,11 @@
 // E_- = E_1 e^(i psi) cos (xi + pi/4)
 
 class HWP_QWP : public Module {
-    double psi, xi;
+    double psi_, xi_;
 
   public:
     HWP_QWP();
-    HWP_QWP(const double& in_psi, const double& in_xi);
+    HWP_QWP(const double& psi, const double& xi);
 
     void execute(Field* signal);
     void execute(Polarizations* signal);
