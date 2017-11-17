@@ -19,7 +19,7 @@ double db_to_natural(const double& db_value) {
 
 double disp_to_beta2(const double& dispersion, const double& wavelength) {
     return -wavelength * wavelength * dispersion /
-           (2 * math_pi * light_speed::mps);
+           (2 * math_pi * light_speed::kmpps);
 }
 
 Complex i_exp(const double& x) { return Complex(std::cos(x), std::sin(x)); }
