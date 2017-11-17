@@ -1,4 +1,5 @@
 #include "active_fiber.h"
+#include <iostream>
 
 ActiveFiber::ActiveFiber() {
     name = "ActiveFiber";
@@ -91,35 +92,44 @@ Field ActiveFiber::filtered_gain(Field* field) const {
 
     Field filtered_gain_(samples, 0.0);
     double arg, dw = field->dw();
-    double fwhm =
-        2.0 * math_pi * light_speed::kmpps * omega_0_ / center_wavelength_;
+    double fwhm = 2.0 * math_pi * light_speed::kmpps * omega_0_
+                  / center_wavelength_ / center_wavelength_;
 
     for (int i = 0; i < samples; ++i) {
         arg = dw * double((i - samples / 2));
         filtered_gain_[i] =
-        exp(half_step * gain / (1.0 + 4.0 * arg * arg / fwhm / fwhm));
+        sqrt(exp(half_step * gain / (1.0 + 4.0 * arg * arg / fwhm / fwhm)));
     }
 
     return filtered_gain_;
 }
 
 Field ActiveFiber::filtered_gain(Polarizations* field) const {
+    double step = length / double(total_steps);
     double half_step = 0.5 * length / double(total_steps);
     int samples = field->right.size();
     
     double energy = field->right.energy() + field->left.energy();
     double gain = satGain / (1.0 + energy / E_satG);
+    
+    //std::cout << "gain = " << gain << std::endl;
+    //std::cout << "exp(gain) = " << exp(gain) << std::endl;
 
     Field filtered_gain_(samples, 0.0);
     double arg, dw = field->right.dw();
-    double fwhm =
-        2.0 * math_pi * light_speed::kmpps * omega_0_ / center_wavelength_;
-
+    double fwhm = 2.0 * math_pi * light_speed::kmpps * omega_0_
+                  / center_wavelength_ / center_wavelength_;
+    //double max = 0;
     for (int i = 0; i < samples; ++i) {
         arg = dw * double((i - samples / 2));
         filtered_gain_[i] =
-        exp(half_step * gain / (1.0 + 4.0 * arg * arg / fwhm / fwhm));
+        sqrt(exp(half_step * gain / (1.0 + 4.0 * arg * arg / fwhm / fwhm)));
+        //if (max < exp(gain / (1.0 + 4.0 * arg * arg / fwhm / fwhm)))
+        //    max = exp(gain / (1.0 + 4.0 * arg * arg / fwhm / fwhm));
+        //exp(half_step * gain);
     }
+    //std::cout << "exp(gain*filter) = " << max << std::endl;
+    //std::cout << "G_filtered = " << sqrt(max) << std::endl;
 
     return filtered_gain_;
 }
@@ -141,14 +151,14 @@ void ActiveFiber::execute(Field* signal) {
     int samples = signal->size();
     double step = length / double(total_steps);
     Field linearity = linear_operator(signal);
-    Field filtered_gain_ = filtered_gain(signal);
+    Field filtered_gain_ = filtered_gain(signal).fft_shift();
     
     for (int j = 0; j < samples; ++j)
         (*signal)[j] *= i_exp(gamma * 0.5 * step * norm((*signal)[j]));
 
     for (int i = 0; i < total_steps; ++i) {
         signal->fft_inplace();
-        (*signal) *= (linearity * sqrt(filtered_gain_));
+        (*signal) *= (linearity * filtered_gain_);
         signal->ifft_inplace();
 
         for (int j = 0; j < samples; ++j)
@@ -161,20 +171,16 @@ void ActiveFiber::execute(Field* signal) {
     // Executor::instance()->enqueue(next, signal);
 }
 
-//#include <iostream>
-
 void ActiveFiber::execute(Polarizations* signal) {
     int samples = signal->right.size();
     double step = length / double(total_steps);
     Field linearity = linear_operator(&(signal->right));
-    Field filtered_gain_ = filtered_gain(signal);
-
-    //std::cout << "satGain = " << satGain << "\tenergy = " << energy
-    //<< "\tE_satG = " << E_satG << "\tT_R = " << T_R << "\tPsatG = " << P_satG << std::endl;
-    //std::cout << sqrt(gain) << "\t" << exp(satGain / (1.0 + energy / E_satG)) << std::endl;
+    Field filtered_gain_ = filtered_gain(signal).fft_shift();
 
     std::vector<double> kappa = {-2. / 3., -4. / 3.};
     double phi_right, phi_left;
+
+    //std::cout << "Before gain" << signal->right[samples / 2] << std::endl;
 
     for (int j = 0; j < samples; ++j) {
         phi_right = kappa[0] * norm(signal->right[j]) +
@@ -187,7 +193,7 @@ void ActiveFiber::execute(Polarizations* signal) {
 
     for (int i = 0; i < total_steps - 1; ++i) {
         signal->fft_inplace();
-        (*signal) *= (linearity * sqrt(filtered_gain_));
+        (*signal) *= (linearity * filtered_gain_);
         signal->ifft_inplace();
 
         for (int j = 0; j < samples; ++j) {
@@ -201,7 +207,7 @@ void ActiveFiber::execute(Polarizations* signal) {
     }
 
     signal->fft_inplace();
-    (*signal) *= (linearity * sqrt(filtered_gain_));
+    (*signal) *= (linearity * filtered_gain_);
     signal->ifft_inplace();
 
     for (int j = 0; j < samples; ++j) {
@@ -213,5 +219,6 @@ void ActiveFiber::execute(Polarizations* signal) {
         signal->left[j] *= i_exp(gamma * 0.5 * step * phi_left);
     }
 
+    //std::cout << "After gain" << signal->right[samples / 2] << std::endl;
     // Executor::instance()->enqueue(next, signal);
 }
