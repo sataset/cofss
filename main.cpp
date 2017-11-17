@@ -77,28 +77,33 @@ int main(int argc, char* argv[]) {
     tdfa->setCenterWavelength(center_wavelength);
     tdfa->setOmega_0(pulse_duration);
 
-    Polarizations *field = new Polarizations;
-    *field = {gaussian(time_steps, 10, 10, pulse_duration / time_steps),
-              gaussian(time_steps, 10, 10, pulse_duration / time_steps)};
+    Polarizations *gaussian_pulse = new Polarizations,
+                  *lorentzian_pulse = new Polarizations;
+    *gaussian_pulse = {gaussian(time_steps, 10, 10, pulse_duration / time_steps),
+                       gaussian(time_steps, 10, 10, pulse_duration / time_steps)};
+    *lorentzian_pulse = {lorentzian(time_steps, 10, 10, pulse_duration / time_steps),
+                         lorentzian(time_steps, 10, 10, pulse_duration / time_steps)};
 
     System sys;
     sys
-        .add(tdfa)
-        //.add(logger)
-        .add(fiber)
-        .add(pbs)
-        .add(fiber)
+        //.add(tdfa)
+        //.add(logger);
         .add(plates)
         .add(fiber)
         .add(coupler)
         .add(fiber)
-        .add(dwnt);
+        .add(dwnt)
+        .add(fiber)
+        .add(tdfa)
+        .add(fiber)
+        .add(pbs);
+        //.add(logger)
         //.add(logger);
 
     unsigned long cycles_count = atoi(argv[1]);
     sys.printModules();
     while (sys.getCount() < cycles_count)
-        sys.execute(field);
+        sys.execute(gaussian_pulse);
 
     std::cout << "Propogation finished" << std::endl;
     std::cout << "Generating logs.." << std::endl;
