@@ -27,11 +27,8 @@ void System::printModules() {
 
 Field* System::execute(Field* signal) {
     if (modules.empty()) return signal;
-
-    for (unsigned long i = 0; i < modules.size(); ++i) {
+    for (unsigned long i = 0; i < modules.size(); ++i)
         modules[i]->execute(signal);
-        // std::cout << modules[i]->getName() << " success" << std::endl;
-    }
 
     counter++;
     std::cout << "Cycle " << counter << " - success!" << std::endl;
@@ -41,11 +38,8 @@ Field* System::execute(Field* signal) {
 
 Polarizations* System::execute(Polarizations* signal) {
     if (modules.empty()) return signal;
-
-    for (unsigned long i = 0; i < modules.size(); ++i) {
+    for (unsigned long i = 0; i < modules.size(); ++i)
         modules[i]->execute(signal);
-        // std::cout << modules[i]->getName() << " success" << std::endl;
-    }
 
     counter++;
     std::cout << "Cycle " << counter << " - success!" << std::endl;
