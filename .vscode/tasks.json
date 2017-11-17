@@ -58,7 +58,7 @@
                 "-Wall",
                 "-Wextra",
                 "-Wshadow",
-                "-std=c++0x",
+                "-std=c++11",
                 "-Iinclude",
                 "test.cpp",
                 //"src/core/executor.cpp",
