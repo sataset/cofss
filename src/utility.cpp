@@ -22,6 +22,29 @@ double disp_to_beta2(const double& dispersion, const double& wavelength) {
            (2 * math_pi * light_speed::kmpps);
 }
 
+RealVector fft_shift(const RealVector& input) {
+    double buffer;
+    RealVector copy(input);
+    unsigned long half_size = input.size() / 2;
+    for (unsigned long i = 0; i < half_size; ++i) {
+        buffer = copy[i];
+        copy[i] = copy[i + half_size];
+        copy[i + half_size] = buffer;
+    }
+
+    return copy;
+}
+
+void fft_shift_inplace(RealVector& input) {
+    double buffer;
+    unsigned long half_size = input.size() / 2;
+    for (unsigned long i = 0; i < half_size; ++i) {
+        buffer = input[i];
+        input[i] = input[i + half_size];
+        input[i + half_size] = buffer;
+    }
+}
+
 Complex i_exp(const double& x) { return Complex(std::cos(x), std::sin(x)); }
 
 Field sqrt(const Field& field) {

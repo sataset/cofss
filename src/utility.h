@@ -22,6 +22,10 @@ double dbm_to_watts(const double& dbm_power);
 double db_to_natural(const double& db_value);
 double disp_to_beta2(const double& dispersion, const double& wavelength);
 
+
+RealVector fft_shift(const RealVector& input);
+void fft_shift_inplace(RealVector& input);
+
 Complex i_exp(const double& x);
 Field sqrt(const Field& field);
 
