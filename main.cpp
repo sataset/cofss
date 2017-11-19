@@ -29,7 +29,7 @@ const double nonlinearity = 0.78; // [1/W/km]
 
 // Th-Doped Fiber Parameters
 const double length_th = 1e-3; // [km]
-const double attenuation_th = db_to_natural(2.54e3);
+const double attenuation_th = 0;//db_to_natural(2.54e3);
 const double beta_2_th = 76;
 const double nonlinearity_th = 0.78;
 
@@ -50,7 +50,10 @@ const double P_sat = 10; // [W]
 const double psi = 0.7, xi = 0.05;
 
 int main(int argc, char* argv[]) {
-    std::ofstream logs("logs.csv", std::ofstream::out | std::ofstream::trunc);
+    std::ofstream time_logs("time_logs.csv", std::ofstream::out |
+    std::ofstream::trunc);
+    std::ofstream freq_logs("freq_logs.csv", std::ofstream::out |
+    std::ofstream::trunc);
 
     Fiber* fiber = new Fiber();
     ActiveFiber* tdfa = new ActiveFiber(satGain, P_satG, cavity_roundtrip_time);
@@ -58,9 +61,8 @@ int main(int argc, char* argv[]) {
     HWP_QWP* plates = new HWP_QWP(psi, xi);
     PD_ISO* pbs = new PD_ISO();
     Logger* logger = new Logger();
+    logger->setName("logger");
     Coupler* coupler = new Coupler(logger);
-
-    coupler->setOuput(logger);
 
     fiber->setAttenuation(attenuation);
     fiber->setDispersion(beta_2);
@@ -86,17 +88,17 @@ int main(int argc, char* argv[]) {
 
     System sys;
     sys
-        //.add(tdfa)
-        //.add(logger);
-        .add(plates)
-        .add(fiber)
-        .add(coupler)
-        .add(fiber)
-        .add(dwnt)
-        .add(fiber)
         .add(tdfa)
-        .add(fiber)
-        .add(pbs);
+        .add(logger);
+        // .add(plates)
+        // .add(fiber)
+        // .add(coupler)
+        // .add(fiber)
+        // .add(dwnt)
+        // .add(fiber)
+        // .add(tdfa)
+        // .add(fiber)
+        // .add(pbs);
         //.add(logger)
         //.add(logger);
 
@@ -104,14 +106,17 @@ int main(int argc, char* argv[]) {
     sys.printModules();
     while (sys.getCount() < cycles_count)
         sys.execute(gaussian_pulse);
-
+    
     std::cout << "Propogation finished" << std::endl;
     std::cout << "Generating logs.." << std::endl;
-    //logger->getFirstNLast(logs);
-    logger->getLogs(logs);
+
+    logger->write_logs_to(time_logs, Logger::TIME);
+    logger->write_logs_to(freq_logs, Logger::FREQUENCY);
+
     std::cout << "File successfully saved" << std::endl;
 
-    logs.close();
+    time_logs.close();
+    freq_logs.close();
 
     return 0;
 }
