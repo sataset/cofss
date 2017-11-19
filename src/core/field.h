@@ -52,6 +52,8 @@ class Field : public ComplexVector {
     double t(const unsigned long& i) const;
     double f(const unsigned long& i) const;
     double w(const unsigned long& i) const;
+    RealVector time_grid() const;
+    RealVector frequency_grid() const;
     RealVector temporal_power() const;
     RealVector spectral_power() const;
 

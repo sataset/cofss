@@ -185,6 +185,19 @@ double Field::f(const unsigned long& i) const {
 
 double Field::w(const unsigned long& i) const { return omega[i]; }
 
+RealVector Field::time_grid() const { return time; }
+
+RealVector Field::frequency_grid() const {
+    RealVector copy(omega.size(),0);
+    unsigned long half_size = omega.size() / 2;
+    for (unsigned long i = 0; i < half_size - 1; ++i)
+        copy[i] = omega[i + half_size + 1];
+    for (unsigned long i = half_size - 1; i < omega.size(); ++i)
+        copy[i] = omega[i - half_size + 1];
+
+    return copy;
+}
+
 RealVector Field::temporal_power() const {
     RealVector power(size(), 0);
     for (unsigned long i = 0; i < size(); ++i)
