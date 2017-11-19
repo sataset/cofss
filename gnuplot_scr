@@ -1,10 +1,12 @@
 set datafile separator ", "
 
-plot "logs.csv" index 0 u 1:(sqrt($2*$2 + $3*$3)) w lines , \
-"logs.csv" index 0 u 1:(sqrt($4*$4 + $5*$5)) w lines
+set title 'Time domain'
+
+plot "time_logs.csv" index 0 u 1:(sqrt($2*$2 + $3*$3)) w lines title 'Right Polarization' , \
+"time_logs.csv" index 0 u 1:(sqrt($4*$4 + $5*$5)) w lines title 'Left Polarization'
 pause -1
-plot "logs.csv" index 1 u 1:(sqrt($2*$2 + $3*$3)) w lines , \
-"logs.csv" index 1 u 1:(sqrt($4*$4 + $5*$5)) w lines
+plot "time_logs.csv" index 1 u 1:(sqrt($2*$2 + $3*$3)) w lines title 'Right Polarization' , \
+"time_logs.csv" index 1 u 1:(sqrt($4*$4 + $5*$5)) w lines title 'Left Polarization'
 pause -1
 
 #(sqrt($1*$1 + $2*$2))

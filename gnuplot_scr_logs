@@ -1,10 +1,12 @@
 #set terminal gif animate delay 100
 #set output 'foobar.gif'
 set datafile separator ", "
-stats "logs.csv"
+stats "time_logs.csv"
+
+set title 'Time domain'
 
 do for [j=0:STATS_blocks] {
-plot "logs.csv" index j u 1:(sqrt($2*$2 + $3*$3)) w lines , \
-"logs.csv" index j u 1:(sqrt($4*$4 + $5*$5)) w lines
+plot "time_logs.csv" index j u 1:(sqrt($2*$2 + $3*$3)) w lines title 'Right Polarization' , \
+"time_logs.csv" index j u 1:(sqrt($4*$4 + $5*$5)) w lines title 'Left Polarization'
 pause -1
 }

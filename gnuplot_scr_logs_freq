@@ -1,0 +1,12 @@
+#set terminal gif animate delay 100
+#set output 'foobar.gif'
+set datafile separator ", "
+stats "freq_logs.csv"
+
+set title 'Frequency domain'
+
+do for [j=0:STATS_blocks] {
+plot "freq_logs.csv" index j u 1:2w lines title 'Right Polarization' , \
+"freq_logs.csv" index j u 1:3 w lines title 'Left Polarization'
+pause -1
+}
