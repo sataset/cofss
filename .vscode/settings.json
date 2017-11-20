@@ -5,15 +5,6 @@
     "editor.minimap.enabled": true,
     "editor.fontFamily": "Fira Code",
     "editor.fontLigatures": true,
-    
-    "C_Cpp.clang_format_path": "/usr/bin/clang-format-3.8",
-    "C_Cpp.clang_format_style": "file",
-    "C_Cpp.clang_format_fallbackStyle": "Google",
-    "C_Cpp.intelliSenseEngine": "Default",
-    "clang.cflags": ["-std=c11"],
-    "clang.cxxflags": [
-    "-std=c++11"
-    ],
     "workbench.colorTheme": "One Dark Pro",
 
     "files.associations": {
