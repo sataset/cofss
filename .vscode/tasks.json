@@ -14,7 +14,7 @@
                 "-Wshadow",
                 "-std=c++11",
                 "-Iinclude",
-                "main.cpp",
+                "tests/main.cpp",
                 //"src/core/executor.cpp",
                 "src/core/system.cpp",
                 "src/core/field.cpp",
@@ -30,53 +30,7 @@
                 "src/modules/pd_iso.cpp",
                 "src/modules/amplifier_simple.cpp",
                 "-lfftw3",
-                "-omain.out"
-            ],
-            "showOutput": "always",
-            "problemMatcher": {
-                "owner": "cpp",
-                "fileLocation": [
-                    "relative",
-                    "${workspaceRoot}"
-                ],
-                "pattern": {
-                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "column": 3,
-                    "severity": 4,
-                    "message": 5
-                }
-            }
-        },
-        {
-            "taskName": "Build Test",
-            "command": "g++",
-            "isShellCommand": true,
-            "args": [
-                "-O3",
-                "-Wall",
-                "-Wextra",
-                "-Wshadow",
-                "-std=c++11",
-                "-Iinclude",
-                "test.cpp",
-                //"src/core/executor.cpp",
-                "src/core/system.cpp",
-                "src/core/field.cpp",
-                "src/core/module.cpp",
-                "src/utility.cpp",
-                "src/modules/counter.cpp",
-                "src/modules/coupler.cpp",
-                "src/modules/logger.cpp",
-                "src/modules/fiber.cpp",
-                "src/modules/dwnt.cpp",
-                "src/modules/active_fiber.cpp",
-                "src/modules/hwp_qwp.cpp",
-                "src/modules/pd_iso.cpp",
-                "src/modules/amplifier_simple.cpp",
-                "-lfftw3",
-                "-otest.out"
+                "-otests/main.out"
             ],
             "showOutput": "always",
             "problemMatcher": {
@@ -97,12 +51,7 @@
         },
         {
             "taskName": "Run Experiment",
-            "command": "./main.out",
-            "isShellCommand": true
-        },
-        {
-            "taskName": "Run Test",
-            "command": "./test.out",
+            "command": "./tests/main.out",
             "isShellCommand": true
         }
     ]
