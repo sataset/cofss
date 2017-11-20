@@ -117,13 +117,13 @@ Field ActiveFiber::filtered_gain(Polarizations* field) const {
 
     Field filtered_gain_(samples, 0.0);
     double arg, dw = field->right.dw();
-    double fwhm = 2.0 * math_pi * light_speed::kmpps * omega_0_
+    double fwhm = 2.0 * math_pi * light_speed::kmps * omega_0_
                   / center_wavelength_ / center_wavelength_;
     //double max = 0;
     for (int i = 0; i < samples; ++i) {
         arg = dw * double((i - samples / 2));
         filtered_gain_[i] =
-        sqrt(exp(half_step * gain / (1.0 + 4.0 * arg * arg / fwhm / fwhm)));
+        sqrt(exp(step * gain / (1.0 + 4.0 * arg * arg / fwhm / fwhm)));
         //if (max < exp(gain / (1.0 + 4.0 * arg * arg / fwhm / fwhm)))
         //    max = exp(gain / (1.0 + 4.0 * arg * arg / fwhm / fwhm));
         //exp(half_step * gain);
