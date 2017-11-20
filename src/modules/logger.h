@@ -8,7 +8,6 @@
 
 class Logger : public Module {
     std::vector<Polarizations> storage;
-    bool is_in_time_domain;
   public:
     Logger();
     enum WriteType { FREQUENCY, TIME };
