@@ -5,8 +5,10 @@ stats "time_logs.csv"
 
 set title 'Time domain'
 
+set term png
 do for [j=0:STATS_blocks] {
+set output "plot_time_cycle_" . j . ".png"
 plot "time_logs.csv" index j u 1:(sqrt($2*$2 + $3*$3)) w lines title 'Right Polarization' , \
 "time_logs.csv" index j u 1:(sqrt($4*$4 + $5*$5)) w lines title 'Left Polarization'
-pause -1
+#pause -1
 }
