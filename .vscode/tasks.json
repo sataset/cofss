@@ -52,7 +52,10 @@
         {
             "taskName": "Run Experiment",
             "command": "./tests/main.out",
-            "isShellCommand": true
+            "isShellCommand": true,
+            "args": [
+                "1"
+            ]
         }
     ]
 }
