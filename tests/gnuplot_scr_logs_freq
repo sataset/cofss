@@ -1,7 +1,6 @@
-#set terminal gif animate delay 100
-#set output 'foobar.gif'
 set datafile separator ", "
 stats "freq_logs.csv"
+
 c = 299792.458
 lambda = 1885.0
 shift = c / lambda
@@ -10,10 +9,8 @@ pi = 3.1415926536
 
 set title 'Frequency domain'
 
-set term png
 do for [j=0:STATS_blocks] {
-set output "plot_freq_cycle_" . j . ".png"
 plot "freq_logs.csv" index j u (c / ($1/2/pi + shift)):2 w lines title 'Right Polarization' , \
 "freq_logs.csv" index j u (c / ($1/2/pi + shift)):3 w lines title 'Left Polarization'
-#pause -1
+pause -1
 }
