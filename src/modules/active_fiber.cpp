@@ -84,7 +84,7 @@ void ActiveFiber::setCenterWavelength(const double& center_wavelength) {
 void ActiveFiber::setOmega_0(const double& omega_0) { omega_0_ = omega_0; }
 
 Field ActiveFiber::filtered_gain(Field* field) const {
-    double half_step = 0.5 * length / double(total_steps);
+    double step = length / double(total_steps);
     int samples = field->size();
     
     double energy = field->energy();
@@ -92,21 +92,20 @@ Field ActiveFiber::filtered_gain(Field* field) const {
 
     Field filtered_gain_(samples, 0.0);
     double arg, dw = field->dw();
-    double fwhm = 2.0 * math_pi * light_speed::kmpps * omega_0_
+    double fwhm = 2.0 * math_pi * light_speed::kmps * omega_0_
                   / center_wavelength_ / center_wavelength_;
 
     for (int i = 0; i < samples; ++i) {
         arg = dw * double((i - samples / 2));
         filtered_gain_[i] =
-        sqrt(exp(half_step * gain / (1.0 + 4.0 * arg * arg / fwhm / fwhm)));
+        sqrt(exp(step * gain / (1.0 + 4.0 * arg * arg / fwhm / fwhm)));
     }
 
-    return filtered_gain_;
+    return filtered_gain_.fft_shift();
 }
 
 Field ActiveFiber::filtered_gain(Polarizations* field) const {
     double step = length / double(total_steps);
-    double half_step = 0.5 * length / double(total_steps);
     int samples = field->right.size();
     
     double energy = field->right.energy() + field->left.energy();
@@ -131,7 +130,7 @@ Field ActiveFiber::filtered_gain(Polarizations* field) const {
     //std::cout << "exp(gain*filter) = " << max << std::endl;
     //std::cout << "G_filtered = " << sqrt(max) << std::endl;
 
-    return filtered_gain_;
+    return filtered_gain_.fft_shift();
 }
 
 Field ActiveFiber::linear_operator(Field* field) const {
@@ -140,7 +139,7 @@ Field ActiveFiber::linear_operator(Field* field) const {
 
     Field linearity(samples, 0);
     for (int i = 0; i < samples; ++i) {
-        linearity[i] = i_exp(beta2 * 0.5 * field->w(i) * field->w(i) * step);
+        linearity[i] = i_exp(beta2 * step * 0.5 * field->w(i) * field->w(i));
         linearity[i] *= exp(-alpha * step * 0.5);
     }
 
@@ -151,7 +150,7 @@ void ActiveFiber::execute(Field* signal) {
     int samples = signal->size();
     double step = length / double(total_steps);
     Field linearity = linear_operator(signal);
-    Field filtered_gain_ = filtered_gain(signal).fft_shift();
+    Field filtered_gain_ = filtered_gain(signal);
     
     for (int j = 0; j < samples; ++j)
         (*signal)[j] *= i_exp(gamma * 0.5 * step * norm((*signal)[j]));
@@ -175,7 +174,7 @@ void ActiveFiber::execute(Polarizations* signal) {
     int samples = signal->right.size();
     double step = length / double(total_steps);
     Field linearity = linear_operator(&(signal->right));
-    Field filtered_gain_ = filtered_gain(signal).fft_shift();
+    Field filtered_gain_ = filtered_gain(signal);
 
     std::vector<double> kappa = {-2. / 3., -4. / 3.};
     double phi_right, phi_left;
