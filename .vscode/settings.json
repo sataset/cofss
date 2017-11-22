@@ -6,6 +6,10 @@
     "editor.fontFamily": "Fira Code",
     "editor.fontLigatures": true,
     "workbench.colorTheme": "One Dark Pro",
+    
+    "C_Cpp.clang_format_style": "file",
+    "C_Cpp.clang_format_fallbackStyle": "WebKit",
+    "C_Cpp.intelliSenseEngine": "Default",
 
     "files.associations": {
         "__split_buffer": "cpp",
