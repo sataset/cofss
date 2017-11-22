@@ -17,7 +17,8 @@ void output_state(std::ostream& os, Polarizations* signal);
 // beta_2       [ps^2 / km]
 // Nonlinearity [1/W/km]
 const double center_wavelength = 1.885e-9;  // [km]
-const double center_wavelength_nm = 1885;  // [nm]
+const double center_wavelength_nm = 1885;   // [nm]
+const double filter_width = 100.0;          // [nm]
 const double pulse_duration = 100.0;        // [ps]
 const double time_steps = 8192;
 const int fft_steps = 4000;
@@ -50,6 +51,10 @@ const double P_sat = 10;  // [W]
 // Plates parameter
 const double psi = 0.7 * math_pi, xi = 0.05 * math_pi;
 
+// Initial Gaussian pulse parameters
+// const double init_pulse_power = 10.0;
+// const double init_pulse_fwhm = 10.0;
+
 int main(int argc, char* argv[]) {
     std::ofstream time_logs("time_logs.csv",
                             std::ofstream::out | std::ofstream::trunc);
@@ -78,7 +83,7 @@ int main(int argc, char* argv[]) {
     tdfa->setFiberLength(length_th);
     tdfa->setTotalSteps(fft_steps);
     tdfa->setCenterWavelength(center_wavelength_nm);
-    tdfa->setOmega_0(pulse_duration);
+    tdfa->setOmega_0(filter_width);
 
     Polarizations *gaussian_pulse = new Polarizations,
                   *lorentzian_pulse = new Polarizations;
@@ -91,8 +96,10 @@ int main(int argc, char* argv[]) {
 
     System sys;
     sys
-    //.add(tdfa)
-    //.add(logger);
+    // .add(logger)
+    // .add(plates)
+    // .add(logger);
+
     .add(plates)
     .add(fiber)
     .add(coupler)
@@ -102,6 +109,7 @@ int main(int argc, char* argv[]) {
     .add(tdfa)
     .add(fiber)
     .add(pbs);
+
     //.add(logger)
     //.add(logger);
 
