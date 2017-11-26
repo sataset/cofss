@@ -68,7 +68,9 @@ int main(int argc, char* argv[]) {
     PD_ISO* pbs = new PD_ISO();
     Logger* logger = new Logger();
     logger->setName("logger");
-    Coupler* coupler = new Coupler(logger);
+    Logger* coupler_logger = new Logger();
+    coupler_logger->setName("coupler_logger");
+    Coupler* coupler = new Coupler(coupler_logger);
 
     fiber->setAttenuation(attenuation);
     fiber->setDispersion(beta_2);
@@ -99,15 +101,23 @@ int main(int argc, char* argv[]) {
     // .add(logger)
     // .add(plates)
     // .add(logger);
-
+    .add(logger)
     .add(plates)
+    .add(logger)
     .add(fiber)
+    .add(logger)
     .add(coupler)
+    .add(logger)
     .add(fiber)
+    .add(logger)
     .add(dwnt)
+    .add(logger)
     .add(fiber)
+    .add(logger)
     .add(tdfa)
+    .add(logger)
     .add(fiber)
+    .add(logger)
     .add(pbs);
 
     //.add(logger)
