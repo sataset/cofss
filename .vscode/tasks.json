@@ -2,10 +2,11 @@
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
     "version": "0.1.0",
+    "runner": "terminal",
     "tasks": [
         {
             "taskName": "Build Experiment",
-            "command": "g++",
+            "command": "g++-7",
             "isShellCommand": true,
             "args": [
                 "-O3",
@@ -15,20 +16,9 @@
                 "-std=c++11",
                 "-Iinclude",
                 "tests/main.cpp",
-                //"src/core/executor.cpp",
-                "src/core/system.cpp",
-                "src/core/field.cpp",
-                "src/core/module.cpp",
+                "src/core/*.cpp",
+                "src/modules/*.cpp",
                 "src/utility.cpp",
-                "src/modules/counter.cpp",
-                "src/modules/coupler.cpp",
-                "src/modules/logger.cpp",
-                "src/modules/fiber.cpp",
-                "src/modules/dwnt.cpp",
-                "src/modules/active_fiber.cpp",
-                "src/modules/hwp_qwp.cpp",
-                "src/modules/pd_iso.cpp",
-                "src/modules/amplifier_simple.cpp",
                 "-lfftw3",
                 "-otests/main.out"
             ],
