@@ -30,12 +30,12 @@ Coupler::Coupler(Module* output) {
 
 void Coupler::execute(Field* signal) {
     output_->execute(new Field((*signal) * transmission));
-    (*signal) *= 1.0 - transmission;
+    (*signal) *= sqrt(1.0 - transmission);
 }
 
 void Coupler::execute(Polarizations* signal) {
     output_->execute(new Polarizations((*signal) * transmission));
-    (*signal) *= 1.0 - transmission;
+    (*signal) *= sqrt(1.0 - transmission);
 }
 
 void Coupler::setOuput(Module* module) {
