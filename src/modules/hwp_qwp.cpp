@@ -16,9 +16,9 @@ HWP_QWP::HWP_QWP(const double& psi, const double& xi) {
 void HWP_QWP::execute(Field* signal) {}
 
 void HWP_QWP::execute(Polarizations* signal) {
-    //Field E_1 = signal->right;
+    //Field E_1 = signal->x();
     // temporary dog-nail
-    Field E_1 = signal->x();
+    Field E_1 = signal->right;
     signal->right = E_1 * i_exp(psi_) * std::cos(xi_ - math_pi / 4.0);
     signal->left = E_1 * i_exp(-psi_) * std::cos(xi_ + math_pi / 4.0);
 
