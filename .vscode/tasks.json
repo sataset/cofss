@@ -20,7 +20,7 @@
                 "src/modules/*.cpp",
                 "src/utility.cpp",
                 "-lfftw3",
-                "-otests/main.out"
+                "-omain.out"
             ],
             "showOutput": "always",
             "problemMatcher": {
@@ -41,7 +41,7 @@
         },
         {
             "taskName": "Run Experiment",
-            "command": "./tests/main.out",
+            "command": "./main.out",
             "isShellCommand": true,
             "args": [
                 "1"
