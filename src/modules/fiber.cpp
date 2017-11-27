@@ -34,7 +34,7 @@ Field Fiber::linear_operator(Field* signal) const {
     Field linearity(samples, 0);
     for (int i = 0; i < samples; ++i) {
         linearity[i] = i_exp(beta2 * step * 0.5 * signal->w(i) * signal->w(i));
-        linearity[i] *= exp(-alpha * 0.5 * step);
+        linearity[i] *= exp(-alpha * step);
     }
 
     return linearity;
@@ -72,14 +72,14 @@ void Fiber::execute(Polarizations* signal) {
     double step = length / double(total_steps);
     Field linearity = linear_operator(&(signal->right));
 
-    std::vector<double> kappa = {-2. / 3., -4. / 3.};
+    double kappa_1 = -2.0 / 3.0, kappa_2 = -4.0 / 3.0;
     double phi_right, phi_left;
 
     for (int j = 0; j < samples; ++j) {
-        phi_right = kappa[0] * norm(signal->right[j]) +
-                kappa[1] * norm(signal->left[j]);
-        phi_left = kappa[1] * norm(signal->right[j]) +
-                kappa[0] * norm(signal->left[j]);
+        phi_right = kappa_1 * norm(signal->right[j]) +
+                kappa_2 * norm(signal->left[j]);
+        phi_left = kappa_2 * norm(signal->right[j]) +
+                kappa_1 * norm(signal->left[j]);
         signal->right[j] *= i_exp(gamma * 0.5 * step * phi_right);
         signal->left[j] *= i_exp(gamma * 0.5 * step * phi_left);
     }
@@ -90,10 +90,10 @@ void Fiber::execute(Polarizations* signal) {
         signal->ifft_inplace();
 
         for (int j = 0; j < samples; ++j) {
-            phi_right = kappa[0] * norm(signal->right[j]) +
-                    kappa[1] * norm(signal->left[j]);
-            phi_left = kappa[1] * norm(signal->right[j]) +
-                    kappa[0] * norm(signal->left[j]);
+            phi_right = kappa_1 * norm(signal->right[j]) +
+                    kappa_2 * norm(signal->left[j]);
+            phi_left = kappa_2 * norm(signal->right[j]) +
+                    kappa_1 * norm(signal->left[j]);
             signal->right[j] *= i_exp(gamma * step * phi_right);
             signal->left[j] *= i_exp(gamma * step * phi_left);
         }
@@ -104,10 +104,10 @@ void Fiber::execute(Polarizations* signal) {
     signal->ifft_inplace();
 
     for (int j = 0; j < samples; ++j) {
-        phi_right = kappa[0] * norm(signal->right[j]) +
-                kappa[1] * norm(signal->left[j]);
-        phi_left = kappa[1] * norm(signal->right[j]) +
-                kappa[0] * norm(signal->left[j]);
+        phi_right = kappa_1 * norm(signal->right[j]) +
+                kappa_2 * norm(signal->left[j]);
+        phi_left = kappa_2 * norm(signal->right[j]) +
+                kappa_1 * norm(signal->left[j]);
         signal->right[j] *= i_exp(gamma * 0.5 * step * phi_right);
         signal->left[j] *= i_exp(gamma * 0.5 * step * phi_left);
     }
