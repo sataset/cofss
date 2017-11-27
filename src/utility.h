@@ -33,12 +33,10 @@ Field sqrt(const Field& field);
 
 Field sech_pulse(const int& nodes_quantity, const double& width);
 Field gaussian(const int& nodes_quantity,
-               const double& peak_power,
                const double& fwhm,
                const double& grid_step);
 
 Field lorentzian(const int& nodes_quantity,
-               const double& peak_power,
                const double& fwhm,
                const double& grid_step);
 
