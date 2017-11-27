@@ -110,25 +110,17 @@ Field ActiveFiber::filtered_gain(Polarizations* field) const {
     
     double energy = field->right.energy() + field->left.energy();
     double gain = satGain / (1.0 + energy / E_satG);
-    
-    //std::cout << "gain = " << gain << std::endl;
-    //std::cout << "exp(gain) = " << exp(gain) << std::endl;
 
     Field filtered_gain_(samples, 0.0);
     double arg, dw = field->right.dw();
     double fwhm = 2.0 * math_pi * light_speed::kmps * omega_0_
                   / center_wavelength_ / center_wavelength_;
-    //double max = 0;
+                  
     for (int i = 0; i < samples; ++i) {
         arg = dw * double((i - samples / 2));
         filtered_gain_[i] =
         sqrt(exp(step * gain / (1.0 + 4.0 * arg * arg / fwhm / fwhm)));
-        //if (max < exp(gain / (1.0 + 4.0 * arg * arg / fwhm / fwhm)))
-        //    max = exp(gain / (1.0 + 4.0 * arg * arg / fwhm / fwhm));
-        //exp(half_step * gain);
     }
-    //std::cout << "exp(gain*filter) = " << max << std::endl;
-    //std::cout << "G_filtered = " << sqrt(max) << std::endl;
 
     return filtered_gain_.fft_shift();
 }
@@ -140,7 +132,7 @@ Field ActiveFiber::linear_operator(Field* field) const {
     Field linearity(samples, 0);
     for (int i = 0; i < samples; ++i) {
         linearity[i] = i_exp(beta2 * step * 0.5 * field->w(i) * field->w(i));
-        linearity[i] *= exp(-alpha * step * 0.5);
+        linearity[i] *= exp(-alpha * step);
     }
 
     return linearity;
@@ -166,58 +158,54 @@ void ActiveFiber::execute(Field* signal) {
 
     for (int j = 0; j < samples; ++j)
         (*signal)[j] *= i_exp(-gamma * 0.5 * step * norm((*signal)[j]));
-
-    // Executor::instance()->enqueue(next, signal);
 }
 
 void ActiveFiber::execute(Polarizations* signal) {
     int samples = signal->right.size();
     double step = length / double(total_steps);
+    
     Field linearity = linear_operator(&(signal->right));
     Field filtered_gain_ = filtered_gain(signal);
 
-    std::vector<double> kappa = {-2. / 3., -4. / 3.};
+    double kappa_1 = -2.0 / 3.0, kappa_2 = -4.0 / 3.0;
     double phi_right, phi_left;
 
-    //std::cout << "Before gain" << signal->right[samples / 2] << std::endl;
-
     for (int j = 0; j < samples; ++j) {
-        phi_right = kappa[0] * norm(signal->right[j]) +
-                kappa[1] * norm(signal->left[j]);
-        phi_left = kappa[1] * norm(signal->right[j]) +
-                kappa[0] * norm(signal->left[j]);
+        phi_right = kappa_1 * norm(signal->right[j]) +
+                kappa_2 * norm(signal->left[j]);
+        phi_left = kappa_2 * norm(signal->right[j]) +
+                kappa_1 * norm(signal->left[j]);
         signal->right[j] *= i_exp(gamma * 0.5 * step * phi_right);
         signal->left[j] *= i_exp(gamma * 0.5 * step * phi_left);
     }
 
     for (int i = 0; i < total_steps - 1; ++i) {
+        filtered_gain_ = filtered_gain(signal);
         signal->fft_inplace();
         (*signal) *= (linearity * filtered_gain_);
         signal->ifft_inplace();
 
         for (int j = 0; j < samples; ++j) {
-            phi_right = kappa[0] * norm(signal->right[j]) +
-                    kappa[1] * norm(signal->left[j]);
-            phi_left = kappa[1] * norm(signal->right[j]) +
-                    kappa[0] * norm(signal->left[j]);
+            phi_right = kappa_1 * norm(signal->right[j]) +
+                    kappa_2 * norm(signal->left[j]);
+            phi_left = kappa_2 * norm(signal->right[j]) +
+                    kappa_1 * norm(signal->left[j]);
             signal->right[j] *= i_exp(gamma * step * phi_right);
             signal->left[j] *= i_exp(gamma * step * phi_left);
         }
     }
 
+    filtered_gain_ = filtered_gain(signal);
     signal->fft_inplace();
     (*signal) *= (linearity * filtered_gain_);
     signal->ifft_inplace();
 
     for (int j = 0; j < samples; ++j) {
-        phi_right = kappa[0] * norm(signal->right[j]) +
-                kappa[1] * norm(signal->left[j]);
-        phi_left = kappa[1] * norm(signal->right[j]) +
-                kappa[0] * norm(signal->left[j]);
+        phi_right = kappa_1 * norm(signal->right[j]) +
+                kappa_2 * norm(signal->left[j]);
+        phi_left = kappa_2 * norm(signal->right[j]) +
+                kappa_1 * norm(signal->left[j]);
         signal->right[j] *= i_exp(gamma * 0.5 * step * phi_right);
         signal->left[j] *= i_exp(gamma * 0.5 * step * phi_left);
     }
-
-    //std::cout << "After gain" << signal->right[samples / 2] << std::endl;
-    // Executor::instance()->enqueue(next, signal);
 }
