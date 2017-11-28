@@ -18,7 +18,7 @@ DWNT::DWNT(const double& modulation_depth,
 
 void DWNT::execute(Field* signal) {
     double absorption;  // |E_+|^2 + |E_-|^2
-    int size = signal->size();                                    
+    int size = signal->size();
     for (int i = 0; i < size; ++i) {
         absorption = alpha_ns + alpha_0 / (1.0 + norm(signal->at(i)) / P_sat);
         if (absorption > 1.0) absorption = 1.0;
