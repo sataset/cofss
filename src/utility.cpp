@@ -70,7 +70,6 @@ Field sech_pulse(const int& nodes_quantity, const double& width) {
 }
 
 Field gaussian(const int& nodes_quantity,
-    const double& peak_power,
     const double& fwhm,
     const double& grid_step) {
     Field pulse(nodes_quantity, 0);
@@ -84,7 +83,6 @@ Field gaussian(const int& nodes_quantity,
 }
 
 Field lorentzian(const int& nodes_quantity,
-    const double& peak_power,
     const double& fwhm,
     const double& grid_step) {
     Field pulse(nodes_quantity, 0);
