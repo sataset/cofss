@@ -6,7 +6,7 @@
     "tasks": [
         {
             "taskName": "Build Experiment",
-            "command": "g++-7",
+            "command": "g++",
             "isShellCommand": true,
             "args": [
                 "-O3",
@@ -15,12 +15,12 @@
                 "-Wshadow",
                 "-std=c++11",
                 "-Iinclude",
-                "tests/main.cpp",
+                "main.cpp",
                 "src/core/*.cpp",
                 "src/modules/*.cpp",
                 "src/utility.cpp",
                 "-lfftw3",
-                "-omain.out"
+                "-omain.o"
             ],
             "showOutput": "always",
             "problemMatcher": {
@@ -41,7 +41,51 @@
         },
         {
             "taskName": "Run Experiment",
-            "command": "./main.out",
+            "command": "./main.o",
+            "isShellCommand": true,
+            "args": [
+                "1"
+            ]
+        },
+
+        {
+            "taskName": "Build Debug",
+            "command": "g++",
+            "isShellCommand": true,
+            "args": [
+                "-O3",
+                "-Wall",
+                "-Wextra",
+                "-Wshadow",
+                "-std=c++11",
+                "-Iinclude",
+                "tests/debug.cpp",
+                "src/core/*.cpp",
+                "src/modules/*.cpp",
+                "src/utility.cpp",
+                "-lfftw3",
+                "-otests/debug.o"
+            ],
+            "showOutput": "always",
+            "problemMatcher": {
+                "owner": "cpp",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceRoot}"
+                ],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
+                }
+            }
+        },
+        {
+            "taskName": "Run Debug",
+            "command": "./tests/debug.o",
             "isShellCommand": true,
             "args": [
                 "1"
