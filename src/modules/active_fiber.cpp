@@ -148,6 +148,7 @@ void ActiveFiber::execute(Field* signal) {
         (*signal)[j] *= i_exp(gamma * 0.5 * step * norm((*signal)[j]));
 
     for (int i = 0; i < total_steps; ++i) {
+        filtered_gain_ = filtered_gain(signal);
         signal->fft_inplace();
         (*signal) *= (linearity * filtered_gain_);
         signal->ifft_inplace();
