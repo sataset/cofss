@@ -9,7 +9,7 @@
 
 class Coupler : public Module {
     Module* output_;
-    double transmission;
+    double transmission_;
   public:
     Coupler();
     Coupler(Module* output);
@@ -17,7 +17,7 @@ class Coupler : public Module {
     void execute(Field* signal);
     void execute(Polarizations* signal);
     void setOuput(Module* module);
-    void setTransmission(const double& percentage);
+    void setTransmission(const double& transmission);
 };
 
 #endif  // COUPLER_H_
