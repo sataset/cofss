@@ -21,7 +21,7 @@ const double center_wavelength_nm = 1885;   // [nm]
 const double filter_width = 100.0;          // [nm]
 const double pulse_duration = 100.0;        // [ps]
 const double time_steps = 8192;
-const int fft_steps = 4000;
+const int fft_steps = 1000;
 
 // Simple Fiber Parameters
 const double length = 0.6e-3;                  // [km]
@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
     coupler_logger->setName("coupler_logger");
 
     Coupler* coupler = new Coupler(coupler_logger);
-    coupler->setTransmission(50);
+    coupler->setTransmission(0.5);
 
     Fiber* fiber = new Fiber();
     fiber->setAttenuation(attenuation);
@@ -92,7 +92,7 @@ int main(int argc, char* argv[]) {
     *gaussian_pulse = {
         gaussian(time_steps, pulse_fwhm, pulse_duration / time_steps),
         gaussian(time_steps, pulse_fwhm, pulse_duration / time_steps)};
-    *gaussian_pulse *= pulse_power;
+    *gaussian_pulse *= sqrt(pulse_power);
 
     System sys;
     sys.add(plates)
