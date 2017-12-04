@@ -28,7 +28,7 @@ void fft_shift_inplace(RealVector& input);
 
 Complex i_exp(const double& x);
 Field sqrt(const Field& field);
-
+double random_value();
 // FWHM - full width at half maximum
 
 Field sech_pulse(const int& nodes_quantity, const double& width);

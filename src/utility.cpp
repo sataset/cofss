@@ -54,6 +54,8 @@ Field sqrt(const Field& field) {
     return copy;
 }
 
+double random_value() { return rand() / double(RAND_MAX); }
+
 Field sech_pulse(const int& nodes_quantity, const double& width) {
     Field pulse(nodes_quantity, 0);
     double argument;
