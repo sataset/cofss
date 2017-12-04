@@ -65,6 +65,7 @@ class ActiveFiber : public Module {
     void execute(Polarizations* signal);
 
   private:
+    Field awgn(const int& samples) const;
     Field filtered_gain(Field* field) const;
     Field filtered_gain(Polarizations* field) const;
     Field linear_operator(Field* field) const;

@@ -73,9 +73,7 @@ void ActiveFiber::setFiberLength(const double& in_length) {
     length = in_length;
 }
 
-void ActiveFiber::setTotalSteps(const int& steps) {
-    total_steps = steps;
-}
+void ActiveFiber::setTotalSteps(const int& steps) { total_steps = steps; }
 
 void ActiveFiber::setCenterWavelength(const double& center_wavelength) {
     center_wavelength_ = center_wavelength;
@@ -83,22 +81,39 @@ void ActiveFiber::setCenterWavelength(const double& center_wavelength) {
 
 void ActiveFiber::setOmega_0(const double& omega_0) { omega_0_ = omega_0; }
 
+Field ActiveFiber::awgn(const int& samples) const {
+    Field noise(samples, 0);
+    double phi_1, phi_2;
+    double norm = 0.005 / 500.0 / 1e5;
+
+    for (int i = 0; i <= samples; i++) {
+        phi_1 = random_value();
+        if(phi_1 == 0.0) phi_1 = random_value();
+        phi_2 = random_value();
+        noise[i] =
+            sqrt(norm) * sqrt(-2.0 * log(phi_1)) * i_exp(2.0 * math_pi * phi_2);
+    }
+
+    return noise;
+}
+
 Field ActiveFiber::filtered_gain(Field* field) const {
     double step = length / double(total_steps);
     int samples = field->size();
-    
+
     double energy = field->energy();
     double gain = satGain / (1.0 + energy / E_satG);
 
     Field filtered_gain_(samples, 0.0);
+
     double arg, dw = field->dw();
-    double fwhm = 2.0 * math_pi * light_speed::kmps * omega_0_
-                  / center_wavelength_ / center_wavelength_;
+    double fwhm = 2.0 * math_pi * light_speed::kmps * omega_0_ /
+                  center_wavelength_ / center_wavelength_;
 
     for (int i = 0; i < samples; ++i) {
         arg = dw * double((i - samples / 2));
         filtered_gain_[i] =
-        sqrt(exp(step * gain / (1.0 + 4.0 * arg * arg / fwhm / fwhm)));
+            sqrt(exp(step * gain / (1.0 + 4.0 * arg * arg / fwhm / fwhm)));
     }
 
     return filtered_gain_.fft_shift();
@@ -107,19 +122,20 @@ Field ActiveFiber::filtered_gain(Field* field) const {
 Field ActiveFiber::filtered_gain(Polarizations* field) const {
     double step = length / double(total_steps);
     int samples = field->right.size();
-    
+
     double energy = field->right.energy() + field->left.energy();
     double gain = satGain / (1.0 + energy / E_satG);
 
     Field filtered_gain_(samples, 0.0);
+
     double arg, dw = field->right.dw();
-    double fwhm = 2.0 * math_pi * light_speed::kmps * omega_0_
-                  / center_wavelength_ / center_wavelength_;
-                  
+    double fwhm = 2.0 * math_pi * light_speed::kmps * omega_0_ /
+                  center_wavelength_ / center_wavelength_;
+
     for (int i = 0; i < samples; ++i) {
         arg = dw * double((i - samples / 2));
         filtered_gain_[i] =
-        sqrt(exp(step * gain / (1.0 + 4.0 * arg * arg / fwhm / fwhm)));
+            sqrt(exp(step * gain / (1.0 + 4.0 * arg * arg / fwhm / fwhm)));
     }
 
     return filtered_gain_.fft_shift();
@@ -143,7 +159,7 @@ void ActiveFiber::execute(Field* signal) {
     double step = length / double(total_steps);
     Field linearity = linear_operator(signal);
     Field filtered_gain_ = filtered_gain(signal);
-    
+
     for (int j = 0; j < samples; ++j)
         (*signal)[j] *= i_exp(gamma * 0.5 * step * norm((*signal)[j]));
 
@@ -164,7 +180,7 @@ void ActiveFiber::execute(Field* signal) {
 void ActiveFiber::execute(Polarizations* signal) {
     int samples = signal->right.size();
     double step = length / double(total_steps);
-    
+
     Field linearity = linear_operator(&(signal->right));
     Field filtered_gain_ = filtered_gain(signal);
 
@@ -172,10 +188,10 @@ void ActiveFiber::execute(Polarizations* signal) {
     double phi_right, phi_left;
 
     for (int j = 0; j < samples; ++j) {
-        phi_right = kappa_1 * norm(signal->right[j]) +
-                kappa_2 * norm(signal->left[j]);
-        phi_left = kappa_2 * norm(signal->right[j]) +
-                kappa_1 * norm(signal->left[j]);
+        phi_right =
+            kappa_1 * norm(signal->right[j]) + kappa_2 * norm(signal->left[j]);
+        phi_left =
+            kappa_2 * norm(signal->right[j]) + kappa_1 * norm(signal->left[j]);
         signal->right[j] *= i_exp(gamma * 0.5 * step * phi_right);
         signal->left[j] *= i_exp(gamma * 0.5 * step * phi_left);
     }
@@ -188,9 +204,9 @@ void ActiveFiber::execute(Polarizations* signal) {
 
         for (int j = 0; j < samples; ++j) {
             phi_right = kappa_1 * norm(signal->right[j]) +
-                    kappa_2 * norm(signal->left[j]);
+                        kappa_2 * norm(signal->left[j]);
             phi_left = kappa_2 * norm(signal->right[j]) +
-                    kappa_1 * norm(signal->left[j]);
+                       kappa_1 * norm(signal->left[j]);
             signal->right[j] *= i_exp(gamma * step * phi_right);
             signal->left[j] *= i_exp(gamma * step * phi_left);
         }
@@ -202,11 +218,18 @@ void ActiveFiber::execute(Polarizations* signal) {
     signal->ifft_inplace();
 
     for (int j = 0; j < samples; ++j) {
-        phi_right = kappa_1 * norm(signal->right[j]) +
-                kappa_2 * norm(signal->left[j]);
-        phi_left = kappa_2 * norm(signal->right[j]) +
-                kappa_1 * norm(signal->left[j]);
+        phi_right =
+            kappa_1 * norm(signal->right[j]) + kappa_2 * norm(signal->left[j]);
+        phi_left =
+            kappa_2 * norm(signal->right[j]) + kappa_1 * norm(signal->left[j]);
         signal->right[j] *= i_exp(gamma * 0.5 * step * phi_right);
         signal->left[j] *= i_exp(gamma * 0.5 * step * phi_left);
     }
+
+    Field noise_right = awgn(samples);
+    Field noise_left = awgn(samples);
+    signal->fft_inplace();
+    signal->right += noise_right;
+    signal->left += noise_left;
+    signal->ifft_inplace();
 }
