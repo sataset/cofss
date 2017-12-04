@@ -56,8 +56,8 @@ void Logger::write_first_to(std::ostream& os, WriteType wt) {
     if (wt == FREQUENCY) {
         RealVector frequency_domain(storage.front().right.frequency_grid());
         RealVector power_right, power_left;
-        power_right = storage.front().right.spectral_power();
-        power_left = storage.front().left.spectral_power();
+        power_right = fft_shift(storage.front().right.spectral_power());
+        power_left = fft_shift(storage.front().left.spectral_power());
         for (unsigned long j = 0; j < size; ++j)
             os << frequency_domain[j] << ','
             << power_right[j] << ','
@@ -86,8 +86,8 @@ void Logger::write_last_to(std::ostream& os, WriteType wt) {
     if (wt == FREQUENCY) {
         RealVector frequency_domain(storage.front().right.frequency_grid());
         RealVector power_right, power_left;
-        power_right = storage.back().right.spectral_power();
-        power_left = storage.back().left.spectral_power();
+        power_right = fft_shift(storage.back().right.spectral_power());
+        power_left = fft_shift(storage.back().left.spectral_power());
         for (unsigned long j = 0; j < size; ++j)
             os << frequency_domain[j] << ','
             << power_right[j] << ','
