@@ -54,7 +54,12 @@ Field sqrt(const Field& field) {
     return copy;
 }
 
-double random_value() { return rand() / double(RAND_MAX); }
+double random_value() {
+    static std::random_device rdev;
+    static std::default_random_engine generator(rdev());
+    static std::uniform_real_distribution<double> distribution(0, 1);
+    return 1.0 - distribution(generator);
+ }
 
 Field sech_pulse(const int& nodes_quantity, const double& width) {
     Field pulse(nodes_quantity, 0);
