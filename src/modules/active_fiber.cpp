@@ -86,9 +86,8 @@ Field ActiveFiber::awgn(const int& samples) const {
     double phi_1, phi_2;
     double norm = 0.005 / 500.0 / 1e5;
 
-    for (int i = 0; i <= samples; i++) {
+    for (int i = 0; i < samples; ++i) {
         phi_1 = random_value();
-        if(phi_1 == 0.0) phi_1 = random_value();
         phi_2 = random_value();
         noise[i] =
             sqrt(norm) * sqrt(-2.0 * log(phi_1)) * i_exp(2.0 * math_pi * phi_2);
@@ -175,6 +174,10 @@ void ActiveFiber::execute(Field* signal) {
 
     for (int j = 0; j < samples; ++j)
         (*signal)[j] *= i_exp(-gamma * 0.5 * step * norm((*signal)[j]));
+
+    signal->fft_inplace();
+    *signal += awgn(samples);
+    signal->ifft_inplace();
 }
 
 void ActiveFiber::execute(Polarizations* signal) {
@@ -226,10 +229,8 @@ void ActiveFiber::execute(Polarizations* signal) {
         signal->left[j] *= i_exp(gamma * 0.5 * step * phi_left);
     }
 
-    Field noise_right = awgn(samples);
-    Field noise_left = awgn(samples);
     signal->fft_inplace();
-    signal->right += noise_right;
-    signal->left += noise_left;
+    signal->right += awgn(samples);
+    signal->left += awgn(samples);
     signal->ifft_inplace();
 }
