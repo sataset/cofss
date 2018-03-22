@@ -11,11 +11,13 @@ class Logger : public Module {
   public:
     Logger();
     enum WriteType { FREQUENCY, TIME };
-    //void getLogs(std::ostream& os, bool for_field);
 
     void write_logs_to(std::ostream& os, WriteType wt = TIME);
     void write_first_to(std::ostream& os, WriteType wt = TIME);
     void write_last_to(std::ostream& os, WriteType wt = TIME);
+
+    Polarizations& get_last();
+    void write_derivative_to(std::ostream& os);
 
     void execute(Field* signal);
     void execute(Polarizations* signal);
