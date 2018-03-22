@@ -45,6 +45,7 @@ class Field : public ComplexVector {
 
     void setTimeStep(const double& time_step);
     void setSamplingRate(const double& rate);
+    double getTimeStep() const;
     double getSamplingRate() const;
     double dt() const;
     double df() const;

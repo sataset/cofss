@@ -1,4 +1,5 @@
 #include "field.h"
+#include "../utility.h"
 
 double Field::peak_power() const {
     double power = 0;
@@ -139,7 +140,7 @@ void Field::setTimeStep(const double& time_step) {
 
     unsigned long samples = size();
     time.assign(samples, 0);
-    omega.assign(samples, 2.0 * M_PI / time_step_ / samples);
+    omega.assign(samples, 2.0 * math_pi / time_step_ / samples);
 
     for (unsigned long i = 0; i < samples; ++i)
         time[i] = double(i) * time_step_;
@@ -156,7 +157,7 @@ void Field::setSamplingRate(const double& rate) {
     time_step_ = 1.0 / rate;
     unsigned long samples = size();
     time.assign(samples, 0);
-    omega.assign(samples, 2.0 * M_PI / time_step_ / samples);
+    omega.assign(samples, 2.0 * math_pi / time_step_ / samples);
 
     for (unsigned long i = 0; i < samples; ++i)
         time[i] = double(i) * time_step_;
@@ -169,18 +170,20 @@ void Field::setSamplingRate(const double& rate) {
     }
 }
 
+double Field::getTimeStep() const { return time_step_; }
+
 double Field::getSamplingRate() const { return 1.0 / time_step_; }
 
 double Field::dt() const { return time_step_; }
 
 double Field::df() const { return 1.0 / time_step_ / size(); }
 
-double Field::dw() const { return 2.0 * M_PI / time_step_ / size(); }
+double Field::dw() const { return 2.0 * math_pi / time_step_ / size(); }
 
 double Field::t(const unsigned long& i) const { return time[i]; }
 
 double Field::f(const unsigned long& i) const {
-    return omega[i] / (2.0 * M_PI);
+    return omega[i] / (2.0 * math_pi);
 }
 
 double Field::w(const unsigned long& i) const { return omega[i]; }
