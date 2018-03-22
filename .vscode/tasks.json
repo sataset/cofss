@@ -6,7 +6,7 @@
     "tasks": [
         {
             "taskName": "Build Experiment",
-            "command": "g++",
+            "command": "g++-7",
             "isShellCommand": true,
             "args": [
                 "-O3",
@@ -14,7 +14,7 @@
                 "-Wextra",
                 "-Wshadow",
                 "-std=c++11",
-                "-Iinclude",
+                "-Isrc",
                 "main.cpp",
                 "src/core/*.cpp",
                 "src/modules/*.cpp",
@@ -50,7 +50,7 @@
 
         {
             "taskName": "Build Debug",
-            "command": "g++",
+            "command": "g++-7",
             "isShellCommand": true,
             "args": [
                 "-O3",
@@ -58,7 +58,7 @@
                 "-Wextra",
                 "-Wshadow",
                 "-std=c++11",
-                "-Iinclude",
+                "-Isrc",
                 "tests/debug.cpp",
                 "src/core/*.cpp",
                 "src/modules/*.cpp",
