@@ -1,3 +1,4 @@
+set grid
 set datafile separator ", "
 file = "logs/time_logs.csv"
 stats file
