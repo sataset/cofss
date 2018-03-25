@@ -9,7 +9,8 @@ void output_state(std::ostream& os, Field& signal);
 void output_state(std::ostream& os, Polarizations& signal);
 void output_state(std::ostream& os, Field* signal);
 void output_state(std::ostream& os, Polarizations* signal);
-void identification(Polarizations& signal);
+std::vector<std::pair<unsigned long, double> > findpeaks(Field signal);
+void identification(std::vector<std::pair<unsigned long, double> > peaks);
 
 // reference units [km], [ps], [W]
 // Length       [km]
@@ -144,11 +145,11 @@ int main(int argc, char* argv[]) {
     coupler_logger->write_first_to(freq_logs, Logger::FREQUENCY);
     coupler_logger->write_last_to(freq_logs, Logger::FREQUENCY);
 
-    // identification(coupler_logger->get_last());
+    identification(findpeaks(coupler_logger->get_last().right));
 
-    std::ofstream dlogs("logs/dlogs.csv",
-                        std::ofstream::out | std::ofstream::trunc);
-    coupler_logger->write_derivative_to(dlogs);
+    // std::ofstream dlogs("logs/dlogs.csv",
+    //                     std::ofstream::out | std::ofstream::trunc);
+    // coupler_logger->write_derivative_to(dlogs);
 
     // coupler_logger->write_logs_to(time_logs, Logger::TIME);
     // coupler_logger->write_logs_to(freq_logs, Logger::FREQUENCY);
@@ -187,42 +188,26 @@ void output_state(std::ostream& os, Polarizations* signal) {
     os << std::flush;
 }
 
-void identification(Polarizations& signal) {
-    unsigned long size = signal.right.size();
-    double time_step = signal.right.getTimeStep();
-    // Power right
-    RealVector power, dpower(size);
-    power = signal.right.temporal_power();
+std::vector<std::pair<unsigned long, double> > findpeaks(Field signal) {
+    double level = signal.average_power();
+    RealVector power = signal.temporal_power();
 
-    // 0 step: building derivative function
-    dpower[0] = (power[1] - power[0]) / time_step;
-    dpower[size - 1] = (power[size - 1] - power[size - 2]) / time_step;
-    for (unsigned long i = 1; i < size - 1; ++i)
-        dpower[i] = (power[i + 1] - power[i - 1]) / 2.0 / time_step;
+    std::vector<std::pair<unsigned long, double> > peaks;
+    for (unsigned long i = 1; i < signal.size() - 1; ++i)
+        if (power[i - 1] < power[i] && power[i + 1] < power[i] &&
+            power[i] > level)
+            peaks.push_back(std::make_pair(i, power[i]));
+    std::sort(peaks.begin(),
+              peaks.end(),
+              [](std::pair<unsigned long, double> p1,
+                 std::pair<unsigned long, double> p2) {
+                  return (p1.second < p2.second);
+              });
+    return peaks;
+}
 
-    // 1 step: find max
-    double range = 0;
-    std::pair<unsigned long, double> max_point(0, 0);
-    std::vector<std::pair<unsigned long, double> > max_points;
-
-    // 1.1 step: find max dpower to determine error
-    for (unsigned long i = 0; i < size; ++i)
-        if (dpower[i] > range) range = dpower[i];
-
-    // if power > 10W
-    // if dpower is in [-20:20] range
-    // if prev dpower is positive
-    for (unsigned long i = 1; i < size - 1; ++i)
-        if (std::abs(power[i]) > 10.0 && std::abs(dpower[i]) < range / 320.0 &&
-            dpower[i - 1] > 0) {
-            max_points.push_back(std::pair<unsigned long, double>(i, power[i]));
-            if (max_point.second < max_points.back().second)
-                max_point = max_points.back();
-        }
-    // QUESTION: what if we have several space pulses with same energy?
-    // 1.2 step: find fwhm of max pulse
-    std::pair<unsigned long, unsigned long> fwhm_ij(max_point.first, 0);
-    for (unsigned long i = 0; i < size; ++i)
-        if (std::abs(power[i] - max_point.second) / 2.0 < 1e-10)
-            fwhm_ij.second = i;
+void identification(std::vector<std::pair<unsigned long, double> > peaks) {
+    std::cout << "There are " << peaks.size() << " peaks." << std::endl;
+    // if (peaks.size() == 1) std::cout << "Regime 1: single pulse" <<
+    // std::endl;
 }
