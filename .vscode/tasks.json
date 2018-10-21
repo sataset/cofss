@@ -1,14 +1,14 @@
 {
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
-    "version": "0.1.0",
+    "version": "2.0.0",
     "runner": "terminal",
     "tasks": [
         {
-            "taskName": "Build Experiment",
+            "label": "Build Primary",
+            "group": { "kind": "build", "isDefault": true },
+            "type": "shell",
             "command": "g++",
-            "isBuildCommand": true,
-            "isShellCommand": true,
             "args": [
                 //"-g",
                 "-DNDEBUG",
@@ -25,13 +25,15 @@
                 "-lfftw3",
                 "-omain.o"
             ],
-            "showOutput": "always",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
             "problemMatcher": {
                 "owner": "cpp",
-                "fileLocation": [
-                    "relative",
-                    "${workspaceRoot}"
-                ],
+                "fileLocation": [ "relative", "${workspaceRoot}" ],
                 "pattern": {
                     "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
                     "file": 1,
@@ -43,39 +45,42 @@
             }
         },
         {
-            "taskName": "Run Experiment",
+            "label": "Run Primary",
+            "group": { "kind": "test", "isDefault": true },
+            "type": "shell",
             "command": "./main.o",
-            "isShellCommand": true,
-            "args": [
-                "1"
-            ]
+            "args": []
         },
-
         {
-            "taskName": "Build Debug",
+            "label": "Build Secondary",
+            "group": "build",
+            "type": "shell",
             "command": "g++",
-            "isShellCommand": true,
             "args": [
+                //"-g",
+                "-DNDEBUG",
                 "-O3",
                 "-Wall",
                 "-Wextra",
                 "-Wshadow",
                 "-std=c++11",
                 "-Isrc",
-                "tests/debug.cpp",
+                "tests/test_peaks_id_2.cpp",
                 "src/core/*.cpp",
                 "src/modules/*.cpp",
                 "src/utility.cpp",
                 "-lfftw3",
-                "-otests/debug.o"
+                "-otests/test.o"
             ],
-            "showOutput": "always",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
             "problemMatcher": {
                 "owner": "cpp",
-                "fileLocation": [
-                    "relative",
-                    "${workspaceRoot}"
-                ],
+                "fileLocation": [ "relative", "${workspaceRoot}" ],
                 "pattern": {
                     "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
                     "file": 1,
@@ -87,12 +92,59 @@
             }
         },
         {
-            "taskName": "Run Debug",
-            "command": "./tests/debug.o",
-            "isShellCommand": true,
+            "label": "Run Secondary",
+            "type": "shell",
+            "group": "test",
+            "command": "./tests/test.o",
+            "args": []
+        },
+        {
+            "label": "Build Secondary (OpenMP)",
+            "group": "build",
+            "type": "shell",
+            "command": "g++-7",
             "args": [
-                "1"
-            ]
+                //"-g",
+                "-fopenmp",
+                "-DNDEBUG",
+                "-O3",
+                "-Wall",
+                "-Wextra",
+                "-Wshadow",
+                "-std=c++11",
+                "-Isrc",
+                "tests/test_omp.cpp",
+                "src/core/*.cpp",
+                "src/modules/*.cpp",
+                "src/utility.cpp",
+                "-lfftw3",
+                "-otests/test_omp.o"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": {
+                "owner": "cpp",
+                "fileLocation": [ "relative", "${workspaceRoot}" ],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
+                }
+            }
+        },
+        {
+            "label": "Run Secondary (OpenMP)",
+            "type": "shell",
+            "group": "test",
+            "command": "./tests/test_omp.o",
+            "args": []
         }
     ]
 }
