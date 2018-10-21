@@ -96,8 +96,7 @@ Field ActiveFiber::awgn(const int& samples) const {
     return noise;
 }
 
-Field ActiveFiber::filtered_gain(Field* field) const {
-    double step = length / double(total_steps);
+Field ActiveFiber::filtered_gain(Field* field, const double& step) const {
     int samples = field->size();
 
     double energy = field->energy();
@@ -118,8 +117,8 @@ Field ActiveFiber::filtered_gain(Field* field) const {
     return filtered_gain_.fft_shift();
 }
 
-Field ActiveFiber::filtered_gain(Polarizations* field) const {
-    double step = length / double(total_steps);
+Field ActiveFiber::filtered_gain(Polarizations* field,
+                                 const double& step) const {
     int samples = field->right.size();
 
     double energy = field->right.energy() + field->left.energy();
@@ -140,40 +139,80 @@ Field ActiveFiber::filtered_gain(Polarizations* field) const {
     return filtered_gain_.fft_shift();
 }
 
-Field ActiveFiber::linear_operator(Field* field) const {
-    double step = length / double(total_steps);
-    int samples = field->size();
+Field ActiveFiber::linear_operator(Field* signal, const double& step) const {
+    Field linearity(signal->size(), exp(-alpha * step));
+    // it's alpha / 2, actually
 
-    Field linearity(samples, 0);
-    for (int i = 0; i < samples; ++i) {
-        linearity[i] = i_exp(beta2 * step * 0.5 * field->w(i) * field->w(i));
-        linearity[i] *= exp(-alpha * step);
-    }
+    for (size_t i = 0; i < signal->size(); ++i)
+        linearity[i] *= i_exp(0.5 * beta2 * step * signal->w(i) * signal->w(i));
 
     return linearity;
+}
+
+void ActiveFiber::nonlinear_step(Field* signal, const double& step) {
+    for (size_t i = 0; i < signal->size(); ++i)
+        signal->at(i) *= i_exp(-gamma * step * norm((*signal)[i]));
+}
+
+Polarizations ActiveFiber::nonlinearity(Polarizations* signal) {
+    Polarizations nonlinearity = (i_unit * gamma) * (*signal);
+
+    double kappa_1 = -2.0 / 3.0, kappa_2 = -4.0 / 3.0;
+    for (size_t i = 0; i < signal->right.size(); ++i) {
+        nonlinearity.right[i] *=
+            kappa_1 * norm(signal->right[i]) + kappa_2 * norm(signal->left[i]);
+        nonlinearity.left[i] *=
+            kappa_2 * norm(signal->right[i]) + kappa_1 * norm(signal->left[i]);
+    }
+
+    return nonlinearity;
+}
+
+void ActiveFiber::nonlinear_step(Polarizations* signal, const double& step) {
+    auto stage = (*signal) + 0.5 * step * nonlinearity(signal);
+    (*signal) += step * nonlinearity(&stage);
+
+    // double I, J;
+    // double kappa_1 = -2.0 / 3.0, kappa_2 = -4.0 / 3.0;
+    // for (size_t i = 0; i < signal->right.size(); ++i) {
+    //     signal->right[i] *= i_exp(step * gamma *
+    //                               (kappa_1 * norm(signal->right[i]) +
+    //                                kappa_2 * norm(signal->left[i])));
+    //     signal->left[i] *= i_exp(step * gamma *
+    //                              (kappa_2 * norm(signal->right[i]) +
+    //                               kappa_1 * norm(signal->left[i])));
+    //     // I = norm(signal->right[i]) + norm(signal->left[i]);
+    //     // J = norm(signal->right[i]) - norm(signal->left[i]);
+    //     // signal->right[i] *= i_exp(step * gamma * (-I + J / 3.0));
+    //     // signal->left[i] *= i_exp(step * gamma * (-I - J / 3.0));
+    // }
 }
 
 void ActiveFiber::execute(Field* signal) {
     int samples = signal->size();
     double step = length / double(total_steps);
-    Field linearity = linear_operator(signal);
-    Field filtered_gain_ = filtered_gain(signal);
 
-    for (int j = 0; j < samples; ++j)
-        (*signal)[j] *= i_exp(gamma * 0.5 * step * norm((*signal)[j]));
+    Field linearity = linear_operator(signal, step);
+    Field filtered_gain_;
 
-    for (int i = 0; i < total_steps; ++i) {
-        filtered_gain_ = filtered_gain(signal);
+    nonlinear_step(signal, 0.5 * step);
+
+    for (int i = 0; i < total_steps - 1; ++i) {
+        filtered_gain_ = filtered_gain(signal, step);
+
         signal->fft_inplace();
         (*signal) *= (linearity * filtered_gain_);
         signal->ifft_inplace();
 
-        for (int j = 0; j < samples; ++j)
-            (*signal)[j] *= i_exp(gamma * step * norm((*signal)[j]));
+        nonlinear_step(signal, step);
     }
 
-    for (int j = 0; j < samples; ++j)
-        (*signal)[j] *= i_exp(-gamma * 0.5 * step * norm((*signal)[j]));
+    filtered_gain_ = filtered_gain(signal, step);
+    signal->fft_inplace();
+    (*signal) *= (linearity * filtered_gain_);
+    signal->ifft_inplace();
+
+    nonlinear_step(signal, 0.5 * step);
 
     signal->fft_inplace();
     *signal += awgn(samples);
@@ -184,50 +223,27 @@ void ActiveFiber::execute(Polarizations* signal) {
     int samples = signal->right.size();
     double step = length / double(total_steps);
 
-    Field linearity = linear_operator(&(signal->right));
-    Field filtered_gain_ = filtered_gain(signal);
+    Field linearity = linear_operator(&(signal->right), step);
+    Field filtered_gain_;
 
-    double kappa_1 = -2.0 / 3.0, kappa_2 = -4.0 / 3.0;
-    double phi_right, phi_left;
-
-    for (int j = 0; j < samples; ++j) {
-        phi_right =
-            kappa_1 * norm(signal->right[j]) + kappa_2 * norm(signal->left[j]);
-        phi_left =
-            kappa_2 * norm(signal->right[j]) + kappa_1 * norm(signal->left[j]);
-        signal->right[j] *= i_exp(gamma * 0.5 * step * phi_right);
-        signal->left[j] *= i_exp(gamma * 0.5 * step * phi_left);
-    }
+    nonlinear_step(signal, 0.5 * step);
 
     for (int i = 0; i < total_steps - 1; ++i) {
-        filtered_gain_ = filtered_gain(signal);
+        filtered_gain_ = filtered_gain(signal, step);
+
         signal->fft_inplace();
         (*signal) *= (linearity * filtered_gain_);
         signal->ifft_inplace();
 
-        for (int j = 0; j < samples; ++j) {
-            phi_right = kappa_1 * norm(signal->right[j]) +
-                        kappa_2 * norm(signal->left[j]);
-            phi_left = kappa_2 * norm(signal->right[j]) +
-                       kappa_1 * norm(signal->left[j]);
-            signal->right[j] *= i_exp(gamma * step * phi_right);
-            signal->left[j] *= i_exp(gamma * step * phi_left);
-        }
+        nonlinear_step(signal, step);
     }
 
-    filtered_gain_ = filtered_gain(signal);
+    filtered_gain_ = filtered_gain(signal, step);
     signal->fft_inplace();
     (*signal) *= (linearity * filtered_gain_);
     signal->ifft_inplace();
 
-    for (int j = 0; j < samples; ++j) {
-        phi_right =
-            kappa_1 * norm(signal->right[j]) + kappa_2 * norm(signal->left[j]);
-        phi_left =
-            kappa_2 * norm(signal->right[j]) + kappa_1 * norm(signal->left[j]);
-        signal->right[j] *= i_exp(gamma * 0.5 * step * phi_right);
-        signal->left[j] *= i_exp(gamma * 0.5 * step * phi_left);
-    }
+    nonlinear_step(signal, 0.5 * step);
 
     signal->fft_inplace();
     signal->right += awgn(samples);

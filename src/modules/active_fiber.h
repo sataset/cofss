@@ -20,6 +20,7 @@
 // T_R    - cavity round trip time
 // T_R = L / c_inFiber == ( L n_0 ) / c
 // By default : 1.644470989
+// (4*0.6e-3 + 1e-3) * 1.45 / 3e-7
 
 // L - fiber length
 // By default : 4.0 * 0.6 + 1.0 [m]
@@ -66,9 +67,14 @@ class ActiveFiber : public Module {
 
   private:
     Field awgn(const int& samples) const;
-    Field filtered_gain(Field* field) const;
-    Field filtered_gain(Polarizations* field) const;
-    Field linear_operator(Field* field) const;
+    Field filtered_gain(Field* field, const double &step) const;
+    Field filtered_gain(Polarizations* field, const double &step) const;
+    Field linear_operator(Field* signal, const double &step) const;
+    void nonlinear_step(Field* signal, const double &step);
+    void nonlinear_step(Polarizations* signal, const double &step);
+
+    Polarizations nonlinearity(Polarizations* signal);
+
 };
 
 #endif  // ACTIVEFIBER_H_
