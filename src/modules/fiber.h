@@ -25,7 +25,11 @@ class Fiber : public Module {
     void execute(Polarizations* signal);
 
   private:
-    Field linear_operator(Field* signal) const;
+    Field linear_operator(Field* signal, const double &step) const;
+    void nonlinear_step(Field* signal, const double &step);
+    void nonlinear_step(Polarizations* signal, const double &step);
+
+    Polarizations nonlinearity(Polarizations* signal);
 };
 
 #endif  // FIBER_H_

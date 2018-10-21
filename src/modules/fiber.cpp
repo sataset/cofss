@@ -27,90 +27,113 @@ void Fiber::setFiberLength(const double& in_length) { length = in_length; }
 
 void Fiber::setTotalSteps(const int& steps) { total_steps = steps; }
 
-Field Fiber::linear_operator(Field* signal) const {
-    double step = length / double(total_steps);
-    int samples = signal->size();
+Field Fiber::linear_operator(Field* signal, const double& step) const {
+    Field linearity(signal->size(), exp(-alpha * step));
+    // it's alpha / 2, actually
 
-    Field linearity(samples, 0);
-    for (int i = 0; i < samples; ++i) {
-        linearity[i] = i_exp(beta2 * step * 0.5 * signal->w(i) * signal->w(i));
-        linearity[i] *= exp(-alpha * step);
-    }
+    for (size_t i = 0; i < signal->size(); ++i)
+        linearity[i] *= i_exp(0.5 * beta2 * step * signal->w(i) * signal->w(i));
 
     return linearity;
 }
 
-void Fiber::execute(Field* signal) {
-    int samples = signal->size();
-    double step = length / double(total_steps);
-    Field linearity = linear_operator(signal);
+void Fiber::nonlinear_step(Field* signal, const double& step) {
+    for (size_t i = 0; i < signal->size(); ++i)
+        signal->at(i) *= i_exp(-gamma * step * norm((*signal)[i]));
+}
 
-    for (int j = 0; j < samples; ++j)
-        (*signal)[j] *= i_exp(gamma * 0.5 * step * norm((*signal)[j]));
+Polarizations Fiber::nonlinearity(Polarizations* signal) {
+    Polarizations nonlinearity = (i_unit * gamma) * (*signal);
+
+    double kappa_1 = -2.0 / 3.0, kappa_2 = -4.0 / 3.0;
+    for (size_t i = 0; i < signal->right.size(); ++i) {
+        nonlinearity.right[i] *=
+            kappa_1 * norm(signal->right[i]) + kappa_2 * norm(signal->left[i]);
+        nonlinearity.left[i] *=
+            kappa_2 * norm(signal->right[i]) + kappa_1 * norm(signal->left[i]);
+    }
+
+    return nonlinearity;
+}
+
+void Fiber::nonlinear_step(Polarizations* signal, const double& step) {
+    // auto stage = (*signal) + 0.5 * step * nonlinearity(signal);
+    // (*signal) += step * nonlinearity(&stage);
+    
+    // - iγ (A + B) ± iγ/3 (A - B)
+    // iγ (κ_1 A + κ_2 B)
+
+    // E = E + Δz N (E + 0.5 * Δz N(E)E) E
+
+    //  I = norm(signal->right[i]) + norm(signal->left[i]);
+    //  J = norm(signal->right[i]) - norm(signal->left[i]);
+    //  tmp_r = signal->right[i] + 0.5 * step * (gamma * (-I + J / 3.0));
+    //  tmp_l = signal->left[i] + 0.5 * step * (gamma * (-I - J / 3.0));
+    //  I_ = norm(tmp_r) + norm(tmp_l);
+    //  J_ = norm(tmp_r) - norm(tmp_l);
+    // signal->right[i] += step * (gamma * (-I_ + J_ / 3.0));
+    // signal->left[i] += step * (gamma * (-I_ - J_ / 3.0));
+
+    double I, J;
+    double kappa_1 = -2.0 / 3.0, kappa_2 = -4.0 / 3.0;
+    for (size_t i = 0; i < signal->right.size(); ++i) {
+        signal->right[i] *= i_exp(step * gamma *
+                                  (kappa_1 * norm(signal->right[i]) +
+                                   kappa_2 * norm(signal->left[i])));
+        signal->left[i] *= i_exp(step * gamma *
+                                 (kappa_2 * norm(signal->right[i]) +
+                                  kappa_1 * norm(signal->left[i])));
+        // I = norm(signal->right[i]) + norm(signal->left[i]);
+        // J = norm(signal->right[i]) - norm(signal->left[i]);
+        // signal->right[i] *= i_exp(step * gamma * (-I + J / 3.0));
+        // signal->left[i] *= i_exp(step * gamma * (-I - J / 3.0));
+    }
+}
+
+void Fiber::execute(Field* signal) {
+    double step = length / double(total_steps);
+
+    Field linearity = linear_operator(signal, step);
+
+    nonlinear_step(signal, 0.5 * step);
 
     for (int i = 0; i < total_steps - 1; ++i) {
         signal->fft_inplace();
         (*signal) *= linearity;
         signal->ifft_inplace();
 
-        for (int j = 0; j < samples; ++j)
-            (*signal)[j] *= i_exp(gamma * step * norm((*signal)[j]));
+        nonlinear_step(signal, step);
     }
 
     signal->fft_inplace();
     (*signal) *= linearity;
     signal->ifft_inplace();
 
-    for (int j = 0; j < samples; ++j)
-        (*signal)[j] *= i_exp(gamma * 0.5 * step * norm((*signal)[j]));
+    nonlinear_step(signal, 0.5 * step);
 
     // Executor::instance()->enqueue(next, signal);
 }
 
 void Fiber::execute(Polarizations* signal) {
-    int samples = signal->right.size();
     double step = length / double(total_steps);
-    Field linearity = linear_operator(&(signal->right));
 
-    double kappa_1 = -2.0 / 3.0, kappa_2 = -4.0 / 3.0;
-    double phi_right, phi_left;
+    Field linearity = linear_operator(&(signal->right), step);
 
-    for (int j = 0; j < samples; ++j) {
-        phi_right = kappa_1 * norm(signal->right[j]) +
-                kappa_2 * norm(signal->left[j]);
-        phi_left = kappa_2 * norm(signal->right[j]) +
-                kappa_1 * norm(signal->left[j]);
-        signal->right[j] *= i_exp(gamma * 0.5 * step * phi_right);
-        signal->left[j] *= i_exp(gamma * 0.5 * step * phi_left);
-    }
+    nonlinear_step(signal, 0.5 * step);
 
     for (int i = 0; i < total_steps - 1; ++i) {
         signal->fft_inplace();
         (*signal) *= linearity;
         signal->ifft_inplace();
 
-        for (int j = 0; j < samples; ++j) {
-            phi_right = kappa_1 * norm(signal->right[j]) +
-                    kappa_2 * norm(signal->left[j]);
-            phi_left = kappa_2 * norm(signal->right[j]) +
-                    kappa_1 * norm(signal->left[j]);
-            signal->right[j] *= i_exp(gamma * step * phi_right);
-            signal->left[j] *= i_exp(gamma * step * phi_left);
-        }
+        nonlinear_step(signal, step);
     }
 
     signal->fft_inplace();
     (*signal) *= linearity;
     signal->ifft_inplace();
 
-    for (int j = 0; j < samples; ++j) {
-        phi_right = kappa_1 * norm(signal->right[j]) +
-                kappa_2 * norm(signal->left[j]);
-        phi_left = kappa_2 * norm(signal->right[j]) +
-                kappa_1 * norm(signal->left[j]);
-        signal->right[j] *= i_exp(gamma * 0.5 * step * phi_right);
-        signal->left[j] *= i_exp(gamma * 0.5 * step * phi_left);
-    }
+    nonlinear_step(signal, 0.5 * step);
 
     // Executor::instance()->enqueue(next, signal);
 }
