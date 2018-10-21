@@ -144,13 +144,15 @@ int main(int argc, char** argv) {
     time_logs_s.append(ending_s);
     freq_logs_s.append(ending_s);
 
-    std::ofstream time_logs(time_logs_s, std::ofstream::out | std::ofstream::trunc);
-    std::ofstream freq_logs(freq_logs_s, std::ofstream::out | std::ofstream::trunc);
+    std::ofstream time_logs(time_logs_s,
+                            std::ofstream::out | std::ofstream::trunc);
+    std::ofstream freq_logs(freq_logs_s,
+                            std::ofstream::out | std::ofstream::trunc);
 
     coupler_logger.export_metadata(time_logs);
     coupler_logger.export_every_to(every_N, time_logs, Logger::TIME);
     coupler_logger.export_last_to(freq_logs, Logger::FREQUENCY);
-    
+
     // coupler_logger.export_first_to(time_logs, Logger::TIME);
     // coupler_logger.export_last_to(time_logs, Logger::TIME);
     // coupler_logger.export_first_to(freq_logs, Logger::FREQUENCY);
@@ -254,8 +256,7 @@ int identification(std::vector<Polarizations>& storage) {
         if (std::abs(peaks[0].power - peaks[1].power) < eps)
             if (std::abs(peaks[0].prominence - peaks[1].prominence) < eps) {
                 return 2;
-            }
-            else
+            } else
                 return 3;
 
     if (peaks.size() == 3)
@@ -264,8 +265,7 @@ int identification(std::vector<Polarizations>& storage) {
             if (std::abs(peaks[0].prominence - peaks[1].prominence) < eps &&
                 std::abs(peaks[1].prominence - peaks[2].prominence) < eps) {
                 return 4;
-                }
-            else
+            } else
                 return 5;
     return -peaks.size();
 }
