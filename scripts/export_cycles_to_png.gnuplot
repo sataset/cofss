@@ -13,7 +13,7 @@ file_time = "logs/time_logs.csv"
 
 ################################
 
-stats file_freq
+stats file_time
 
 N = STATS_blocks - 2
 command = 'mkdir logs/plot_png'
