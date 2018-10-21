@@ -16,6 +16,14 @@ DWNT::DWNT(const double& modulation_depth,
     P_sat = saturation_peak_power;
 }
 
+void DWNT::setModulationDepth(const double& in_alpha_0) {
+    alpha_0 = in_alpha_0;
+}
+void DWNT::setNonSaturableLosses(const double& in_alpha_ns) {
+    alpha_ns = in_alpha_ns;
+}
+void DWNT::setSaturationPeakPower(const double& in_P_sat) { P_sat = in_P_sat; }
+
 void DWNT::execute(Field* signal) {
     double absorption;  // |E_+|^2 + |E_-|^2
     int size = signal->size();

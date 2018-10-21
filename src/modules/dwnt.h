@@ -33,6 +33,9 @@ class DWNT : public Module {
     DWNT(const double& modulation_depth,
          const double& saturation_peak_power,
          const double& non_saturable_losses);
+    void setModulationDepth(const double& in_alpha_0);
+    void setNonSaturableLosses(const double& in_alpha_ns);
+    void setSaturationPeakPower(const double& in_P_sat);
 
     void execute(Field* signal);
     void execute(Polarizations* signal);
