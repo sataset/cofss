@@ -290,6 +290,26 @@ Field Polarizations::x() { return (right + left) / sqrt(2); }
 
 Field Polarizations::y() { return (right - left) / Complex(0, sqrt(2)); }
 
+Polarizations Polarizations::operator+(const Polarizations &other) const {
+    return Polarizations(*this) += other;
+}
+
+Polarizations Polarizations::operator-(const Polarizations &other) const {
+    return Polarizations(*this) -= other;
+}
+
+Polarizations Polarizations::operator+=(const Polarizations &other) {
+    right += other.right;
+    left += other.left;
+    return *this;
+}
+
+Polarizations Polarizations::operator-=(const Polarizations &other) {
+    right -= other.right;
+    left -= other.left;
+    return *this;
+}
+
 Polarizations Polarizations::operator*(const Complex& multiplier) const {
     return Polarizations{right * multiplier, left * multiplier};
 }
@@ -310,6 +330,10 @@ Polarizations& Polarizations::operator*=(const Field& multipliers) {
     left *= multipliers;
 
     return *this;
+}
+
+Polarizations operator*(const Complex &lhs, const Polarizations& rhs) {
+    return Polarizations(rhs) *= lhs;
 }
 
 Polarizations& Polarizations::fft_inplace() {

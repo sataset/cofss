@@ -71,10 +71,17 @@ struct Polarizations {
     Field x();
     Field y();
 
+    Polarizations operator+(const Polarizations &other) const;
+    Polarizations operator-(const Polarizations &other) const;
+    Polarizations operator+=(const Polarizations &other);
+    Polarizations operator-=(const Polarizations &other);
+
     Polarizations operator*(const Complex& multiplier) const;
     Polarizations operator*(const Field& multipliers) const;
     Polarizations& operator*=(const Complex& multiplier);
     Polarizations& operator*=(const Field& multipliers);
+
+    friend Polarizations operator*(const Complex &lhs, const Polarizations& rhs);
 
     Polarizations& fft_inplace();
     Polarizations& ifft_inplace();
