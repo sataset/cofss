@@ -2,9 +2,13 @@
 
 #include <iostream>
 
-System& System::add(Module* module) {
-    modules.push_back(module);
+System::System(){ stop_flag = 0; counter = 0; }
 
+System& System::add(Module* module) {
+    if (modules.size() != 0)
+        modules.back()->setNextModule(module);
+    modules.push_back(module);
+    
     return *this;
 }
 
@@ -31,7 +35,7 @@ Field* System::execute(Field* signal) {
         modules[i]->execute(signal);
 
     counter++;
-    std::cout << "Cycle " << counter << " - success!" << std::endl;
+    std::cout << "Cycle " << counter << " - success!\r";
 
     return signal;
 }
@@ -42,7 +46,7 @@ Polarizations* System::execute(Polarizations* signal) {
         modules[i]->execute(signal);
 
     counter++;
-    std::cout << "Cycle " << counter << " - success!" << std::endl;
+    std::cout << "Cycle " << counter << " - success!\r";
 
     return signal;
 }

@@ -12,8 +12,7 @@ class System {
     bool stop_flag;
 
   public:
-    System(){ stop_flag = 0; counter = 0; };
-
+    System();
     System& add(Module* module);
     System& clear();
     System& remove(int module_num);
