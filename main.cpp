@@ -2,15 +2,29 @@
 #include <iostream>
 #include <string>
 
-#include "src/core.h"
-#include "src/modules/modules.h"
+#include "core.h"
+#include "modules/modules.h"
+
+struct peak {
+    unsigned long position;
+    double power;
+    double prominence;
+
+    peak(unsigned long first, double second, double third) {
+        position = first;
+        power = second;
+        prominence = third;
+    }
+};
 
 void output_state(std::ostream& os, Field& signal);
 void output_state(std::ostream& os, Polarizations& signal);
 void output_state(std::ostream& os, Field* signal);
 void output_state(std::ostream& os, Polarizations* signal);
-std::vector<std::pair<unsigned long, double> > findpeaks(Field signal);
-void identification(std::vector<std::pair<unsigned long, double> > peaks);
+RealVector smooth(RealVector input);
+std::vector<peak> findpeaks(Field signal);
+int identification(std::vector<Polarizations>& storage);
+void id_response(int id_value, std::ostream& os);
 
 // reference units [km], [ps], [W]
 // Length       [km]
@@ -24,7 +38,8 @@ const double filter_width = 100.0;         // [nm]
 const double pulse_duration = 100.0;       // [ps]
 const double time_steps = 8192;
 // const double time_step = pulse_duration / time_steps;
-const int fft_steps = 10;
+int fft_steps = 10;
+int number_of_cycles = 2000;
 
 // Simple Fiber Parameters
 const double length = 0.6e-3;                  // [km]
@@ -43,7 +58,7 @@ const double refractive_index = 1.45;
 const double total_cavity_length = 4.0 * length + length_th;  // [km]
 const double cavity_roundtrip_time =
     total_cavity_length * refractive_index / light_speed::kmpps;  // [ps]
-const double P_satG = 0.04;
+double P_satG = 0.03;
 // const double E_satG = cavity_roundtrip_time * P_satG;
 
 // DWNT-SA
@@ -52,109 +67,98 @@ const double alpha_ns = 0.36;
 const double P_sat = 10;  // [W]
 
 // Plates parameter
-// const double psi = 0.7 * math_pi, xi = 0.05 * math_pi;
+// psi [0 : π] | chi [0 : π / 4]
+double psi = 0.063 * math_pi, chi = 0.1 * math_pi;
 
 // Initial Gaussian pulse parameters
 const double pulse_power = 10.0;
 const double pulse_fwhm = 1;
 
-int main(int argc, char* argv[]) {
-    // std::string time_logs_s = "logs/time_logs_(psi = ";
-    // time_logs_s.append(argv[2]);
-    // time_logs_s.append(", chi = ");
-    // time_logs_s.append(argv[3]);
-    // time_logs_s.append(").csv");
+//  psi(hwp), chi(qwp), P_satG, fft_steps, cycles, every_N
+int main(int argc, char** argv) {
+    P_satG = atof(argv[3]);
+    fft_steps = atoi(argv[4]);
+    number_of_cycles = atoi(argv[5]);
+    int every_N = atoi(argv[6]);
 
-    // std::string freq_logs_s = "logs/freq_logs_(psi = ";
-    // freq_logs_s.append(argv[2]);
-    // freq_logs_s.append(", chi = ");
-    // freq_logs_s.append(argv[3]);
-    // freq_logs_s.append(").csv");
+    DWNT dwnt(alpha_0, P_sat, alpha_ns);
+    HWP_QWP plates(atof(argv[1]) * math_pi, atof(argv[2]) * math_pi);
+    PD_ISO pbs;
 
-    // std::ofstream time_logs(time_logs_s,
-    //                         std::ofstream::out | std::ofstream::trunc);
-    // std::ofstream freq_logs(freq_logs_s,
-    //                         std::ofstream::out | std::ofstream::trunc);
+    Logger coupler_logger;
+    coupler_logger.setName("coupler_logger");
 
-    std::ofstream time_logs("logs/time_logs.csv",
-                            std::ofstream::out | std::ofstream::trunc);
-    std::ofstream freq_logs("logs/freq_logs.csv",
-                            std::ofstream::out | std::ofstream::trunc);
+    Coupler coupler(&coupler_logger);
+    coupler.setTransmission(0.5);
 
-    DWNT* dwnt = new DWNT(alpha_0, P_sat, alpha_ns);
-    HWP_QWP* plates =
-        new HWP_QWP(atof(argv[2]) * math_pi, atof(argv[3]) * math_pi);
-    PD_ISO* pbs = new PD_ISO();
+    Fiber fiber;
+    fiber.setAttenuation(attenuation);
+    fiber.setDispersion(beta_2);
+    fiber.setNonlinearity(nonlinearity);
+    fiber.setFiberLength(length);
+    fiber.setTotalSteps(fft_steps);
 
-    Logger* coupler_logger = new Logger();
-    coupler_logger->setName("coupler_logger");
-
-    Coupler* coupler = new Coupler(coupler_logger);
-    coupler->setTransmission(0.5);
-
-    Fiber* fiber = new Fiber();
-    fiber->setAttenuation(attenuation);
-    fiber->setDispersion(beta_2);
-    fiber->setNonlinearity(nonlinearity);
-    fiber->setFiberLength(length);
-    fiber->setTotalSteps(fft_steps);
-
-    ActiveFiber* tdfa = new ActiveFiber(satGain, P_satG, cavity_roundtrip_time);
-    tdfa->setName("tdfa");
-    tdfa->setAttenuation(attenuation_th);
-    tdfa->setDispersion(beta_2_th);
-    tdfa->setNonlinearity(nonlinearity_th);
-    tdfa->setFiberLength(length_th);
-    tdfa->setTotalSteps(fft_steps);
-    tdfa->setCenterWavelength(center_wavelength_nm);
-    tdfa->setOmega_0(filter_width);
-
-    // Polarizations* gaussian_pulse = new Polarizations;
-    // gaussian_pulse->right =
-    //     gaussian(time_steps, pulse_fwhm, pulse_duration / time_steps);
-    //*gaussian_pulse *= sqrt(pulse_power);
-    Polarizations* lorentzian_pulse = new Polarizations;
-    lorentzian_pulse->right =
-        lorentzian(time_steps, pulse_fwhm, pulse_duration / time_steps);
-    lorentzian_pulse->left =
-        lorentzian(time_steps, pulse_fwhm, pulse_duration / time_steps);
-    *lorentzian_pulse *= sqrt(pulse_power);
-
+    ActiveFiber tdfa(satGain, P_satG, cavity_roundtrip_time);
+    tdfa.setName("tdfa");
+    tdfa.setAttenuation(attenuation_th);
+    tdfa.setDispersion(beta_2_th);
+    tdfa.setNonlinearity(nonlinearity_th);
+    tdfa.setFiberLength(length_th);
+    tdfa.setTotalSteps(fft_steps);
+    tdfa.setCenterWavelength(center_wavelength_nm);
+    tdfa.setOmega_0(filter_width);
 
     System sys;
-    sys.add(plates)
-        .add(fiber)
-        .add(coupler)
-        .add(fiber)
-        .add(dwnt)
-        .add(fiber)
-        .add(tdfa)
-        .add(fiber)
-        .add(pbs);
-
-    unsigned long cycles_count = atoi(argv[1]);
+    sys.add(&plates)
+        .add(&fiber)
+        .add(&coupler)
+        .add(&fiber)
+        .add(&dwnt)
+        .add(&fiber)
+        .add(&tdfa)
+        .add(&fiber)
+        .add(&pbs);
     sys.printModules();
-    while (sys.getCount() < cycles_count)
-        sys.execute(lorentzian_pulse);
+
+    Polarizations lorentzian_pulse = {
+        lorentzian(time_steps, pulse_fwhm, pulse_duration / time_steps),
+        lorentzian(time_steps, pulse_fwhm, pulse_duration / time_steps)};
+    lorentzian_pulse *= sqrt(pulse_power);
+
+    // plates->change_chi(atof(argv[1]) * math_pi);
+
+    while (sys.getCount() < number_of_cycles)
+        sys.execute(&lorentzian_pulse);
 
     std::cout << "Propogation finished" << std::endl;
     std::cout << "Generating logs.." << std::endl;
 
-    coupler_logger->write_first_to(time_logs, Logger::TIME);
-    coupler_logger->write_last_to(time_logs, Logger::TIME);
-    coupler_logger->write_first_to(freq_logs, Logger::FREQUENCY);
-    coupler_logger->write_last_to(freq_logs, Logger::FREQUENCY);
+    std::string freq_logs_s, time_logs_s, ending_s;
+    time_logs_s = "logs/time";
+    freq_logs_s = "logs/freq";
+    ending_s.append("_logs(");
+    ending_s.append(argv[1]);
+    ending_s.append(",");
+    ending_s.append(argv[2]);
+    ending_s.append(").csv");
+    time_logs_s.append(ending_s);
+    freq_logs_s.append(ending_s);
 
-    identification(findpeaks(coupler_logger->get_last().right));
+    std::ofstream time_logs(time_logs_s, std::ofstream::out | std::ofstream::trunc);
+    std::ofstream freq_logs(freq_logs_s, std::ofstream::out | std::ofstream::trunc);
 
-    // std::ofstream dlogs("logs/dlogs.csv",
-    //                     std::ofstream::out | std::ofstream::trunc);
-    // coupler_logger->write_derivative_to(dlogs);
-
-    // coupler_logger->write_logs_to(time_logs, Logger::TIME);
-    // coupler_logger->write_logs_to(freq_logs, Logger::FREQUENCY);
+    coupler_logger.export_metadata(time_logs);
+    coupler_logger.export_every_to(every_N, time_logs, Logger::TIME);
+    coupler_logger.export_last_to(freq_logs, Logger::FREQUENCY);
+    
+    // coupler_logger.export_first_to(time_logs, Logger::TIME);
+    // coupler_logger.export_last_to(time_logs, Logger::TIME);
+    // coupler_logger.export_first_to(freq_logs, Logger::FREQUENCY);
+    // coupler_logger.export_last_to(freq_logs, Logger::FREQUENCY);
 
     std::cout << "File successfully saved" << std::endl;
+
+    id_response(identification(coupler_logger.getStorage()), std::cout);
 
     time_logs.close();
     freq_logs.close();
@@ -188,26 +192,109 @@ void output_state(std::ostream& os, Polarizations* signal) {
     os << std::flush;
 }
 
-std::vector<std::pair<unsigned long, double> > findpeaks(Field signal) {
-    double level = signal.average_power();
-    RealVector power = signal.temporal_power();
+RealVector smooth(RealVector input) {
+    RealVector result(input.size() - 4);
 
-    std::vector<std::pair<unsigned long, double> > peaks;
-    for (unsigned long i = 1; i < signal.size() - 1; ++i)
+    for (unsigned long i = 0; i < input.size() - 4; ++i)
+        result[i] = (input[i] + 4.0 * input[i + 1] + 6.0 * input[i + 2] +
+                     4.0 * input[i + 3] + input[i + 4]) /
+                    16.0;
+    return result;
+}
+
+std::vector<struct peak> findpeaks(Field signal) {
+    double level = signal.peak_power() / 10.0;
+    RealVector power = smooth(signal.temporal_power());
+
+    std::cout << "Finding peaks" << std::endl;
+    // Finding peaks
+    std::vector<peak> peaks;
+    for (unsigned long i = 1; i < power.size() - 1; ++i)
         if (power[i - 1] < power[i] && power[i + 1] < power[i] &&
             power[i] > level)
-            peaks.push_back(std::make_pair(i, power[i]));
-    std::sort(peaks.begin(),
-              peaks.end(),
-              [](std::pair<unsigned long, double> p1,
-                 std::pair<unsigned long, double> p2) {
-                  return (p1.second < p2.second);
-              });
+            peaks.push_back({i, power[i], std::abs(power[i] - power[0])});
+    std::cout << "Determining prominence" << std::endl;
+    // Determining prominence
+    for (unsigned long i = 0; i < peaks.size(); ++i)
+        for (unsigned long j = peaks[i].position; j < power.size() - 1; ++j)
+            if (power[j - 1] > power[j] && power[j + 1] > power[j]) {
+                peaks[i].prominence = std::abs(peaks[i].power - power[j]);
+                break;
+            }
+    std::cout << "Sorting" << std::endl;
+    std::sort(peaks.begin(), peaks.end(), [](peak p1, peak p2) {
+        return (p1.power < p2.power);
+    });
     return peaks;
 }
 
-void identification(std::vector<std::pair<unsigned long, double> > peaks) {
-    std::cout << "There are " << peaks.size() << " peaks." << std::endl;
-    // if (peaks.size() == 1) std::cout << "Regime 1: single pulse" <<
-    // std::endl;
+int identification(std::vector<Polarizations>& storage) {
+    std::vector<double> energy_on_cycles(100);
+
+    if (storage.size() >= 100)
+        for (unsigned long i = 0, size = storage.size() - 1; i < 100; ++i)
+            energy_on_cycles[i] = storage[size - i].right.energy();
+    else
+        return 7;
+
+    std::sort(energy_on_cycles.begin(), energy_on_cycles.end());
+
+    if (std::abs(energy_on_cycles.back() - energy_on_cycles.front()) /
+            energy_on_cycles.back() >
+        0.01)
+        return 6;
+
+    std::vector<struct peak> peaks = findpeaks(storage.back().right);
+
+    double eps = 1.0;
+
+    if (peaks.size() == 1) return 1;
+
+    if (peaks.size() == 2)
+        if (std::abs(peaks[0].power - peaks[1].power) < eps)
+            if (std::abs(peaks[0].prominence - peaks[1].prominence) < eps) {
+                return 2;
+            }
+            else
+                return 3;
+
+    if (peaks.size() == 3)
+        if (std::abs(peaks[0].power - peaks[1].power) < eps &&
+            std::abs(peaks[1].power - peaks[2].power) < eps)
+            if (std::abs(peaks[0].prominence - peaks[1].prominence) < eps &&
+                std::abs(peaks[1].prominence - peaks[2].prominence) < eps) {
+                return 4;
+                }
+            else
+                return 5;
+    return -peaks.size();
+}
+
+void id_response(int id_value, std::ostream& os) {
+    switch (id_value) {
+        case 1:
+            os << "Regime 1: single pulse" << std::endl;
+            break;
+        case 2:
+            os << "Regime 2: 2 spaced pulses" << std::endl;
+            break;
+        case 3:
+            os << "Regime 3: 2 soliton molecule" << std::endl;
+            break;
+        case 4:
+            os << "Regime 4: 3 spaced pulses" << std::endl;
+            break;
+        case 5:
+            os << "Regime 5: 3 soliton molecule" << std::endl;
+            break;
+        case 6:
+            os << "Unstable regimen" << std::endl;
+            break;
+        case 7:
+            os << "Not enough data (< 100 cycles)" << std::endl;
+            break;
+        default:
+            os << "Undefined regimen (" << -id_value << " peaks)" << std::endl;
+            break;
+    }
 }
